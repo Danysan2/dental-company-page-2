@@ -61,6 +61,8 @@ COPY --from=builder /app/node_modules/@prisma           ./node_modules/@prisma
 COPY --from=builder /app/prisma                         ./prisma
 COPY --from=builder /app/node_modules/bcryptjs          ./node_modules/bcryptjs
 COPY --from=builder /app/node_modules/@prisma           ./node_modules/@prisma
+COPY --from=builder /app/node_modules/prisma            ./node_modules/prisma
+COPY --from=builder /app/node_modules/.bin/prisma       ./node_modules/.bin/prisma
 
 USER nextjs
 
@@ -69,4 +71,4 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Push schema → run seed → start server
-CMD ["sh", "-c", "npx prisma db push --skip-generate && node prisma/seed.js ; node server.js"]
+CMD ["sh", "-c", "./node_modules/.bin/prisma db push --schema=./prisma/schema.prisma && node prisma/seed.js ; node server.js"]
