@@ -20,6 +20,11 @@ services:
       NEXT_PUBLIC_EMAILJS_TEMPLATE_CLINICA: ${NEXT_PUBLIC_EMAILJS_TEMPLATE_CLINICA}
       NEXT_PUBLIC_EMAILJS_PUBLIC_KEY: ${NEXT_PUBLIC_EMAILJS_PUBLIC_KEY}
       NEXT_PUBLIC_CLINICA_EMAIL: ${NEXT_PUBLIC_CLINICA_EMAIL}
+    networks:
+      - dokploy-network
     ports:
       - "3000:3000"
     restart: unless-stopped
+networks:
+  dokploy-network:
+    external: true
