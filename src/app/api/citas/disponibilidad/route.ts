@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     const ocupadas = new Set(citasDelDia.map(c => c.hora))
     const disponibles = HORARIOS.filter(h => !ocupadas.has(h))
 
-    return NextResponse.json({ fecha, disponibles, ocupadas: [...ocupadas] })
+    return NextResponse.json({ fecha, disponibles, ocupadas: Array.from(ocupadas) })
   } catch (err) {
     console.error('[GET /api/citas/disponibilidad]', err)
     return ServerError()
