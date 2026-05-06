@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: 'Conoce todos los servicios odontológicos que ofrecemos: limpiezas, blanqueamientos, implantes, ortodoncia y más.',
 }
 
-export const revalidate = 3600 // revalidar cada hora
+export const dynamic = 'force-dynamic'
 
 export default async function ServiciosPage() {
   const servicios = await prisma.servicio.findMany({
