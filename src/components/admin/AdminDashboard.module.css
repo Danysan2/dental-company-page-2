@@ -1,0 +1,20 @@
+.page   { display: flex; flex-direction: column; gap: 1.5rem; }
+.loading { display: flex; justify-content: center; padding: 4rem; }
+.error   { color: var(--color-error); padding: 1rem; }
+
+.header  { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+.title   { font-size: 1.6rem; font-weight: 800; }
+.date    { font-size: .85rem; color: var(--color-text-muted); text-transform: capitalize; }
+
+.kpis  { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+.kpiCard { display: flex; align-items: center; gap: 1rem; }
+.kpiIcon { font-size: 2rem; }
+.kpiLabel { font-size: .8rem; color: var(--color-text-muted); font-weight: 600; margin-bottom: .2rem; }
+.kpiValue { font-size: 1.5rem; font-weight: 800; }
+
+.charts      { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; }
+.chartCard   { }
+.chartTitle  { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; }
+
+.proximasCard { }
+.empty { color: var(--color-text-muted); font-size: .9rem; padding: .5rem 0; }

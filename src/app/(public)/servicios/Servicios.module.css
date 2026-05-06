@@ -1,0 +1,17 @@
+.page       { padding: 4rem 0; }
+.container  { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+.hero       { text-align: center; margin-bottom: 3rem; }
+.hero h1    { font-size: 2.5rem; font-weight: 900; margin-bottom: .75rem; }
+.hero p     { color: var(--color-text-muted); font-size: 1.05rem; }
+
+.grid       { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; margin-bottom: 3rem; }
+.servicioCard { display: flex; flex-direction: column; gap: .5rem; }
+.servicioNombre { font-size: 1.05rem; font-weight: 700; }
+.servicioDesc   { font-size: .875rem; color: var(--color-text-muted); flex: 1; }
+.servicioFooter { display: flex; align-items: center; justify-content: space-between; margin-top: .5rem; }
+.precio         { font-size: 1.1rem; font-weight: 800; color: var(--color-primary); }
+.duracion       { font-size: .8rem; color: var(--color-text-muted); }
+
+.cta    { text-align: center; padding: 2rem; background: var(--color-bg); border-radius: var(--radius); }
+.cta h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: .75rem; }
+.cta p  { color: var(--color-text-muted); margin-bottom: 1.25rem; }

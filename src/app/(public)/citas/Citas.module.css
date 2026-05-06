@@ -1,0 +1,108 @@
+.page      { padding: 3rem 0 5rem; }
+.container { max-width: 720px; margin: 0 auto; padding: 0 1.5rem; }
+
+.hero { text-align: center; margin-bottom: 2rem; }
+.hero h1 { font-size: 2.2rem; font-weight: 900; margin-bottom: .5rem; }
+.hero p  { color: var(--color-text-muted); }
+
+/* Stepper */
+.stepper { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 2rem; }
+.stepItem { display: flex; flex-direction: column; align-items: center; gap: .35rem; flex: 1; position: relative; }
+.stepItem:not(:last-child)::after {
+  content:    '';
+  position:   absolute;
+  top:        16px;
+  left:       60%;
+  right:      -40%;
+  height:     2px;
+  background: var(--color-border);
+  z-index:    0;
+}
+.stepDone:not(:last-child)::after  { background: var(--color-primary); }
+.stepActive:not(:last-child)::after { background: var(--color-border); }
+
+.stepCircle {
+  width:         32px;
+  height:        32px;
+  border-radius: 50%;
+  background:    var(--color-border);
+  color:         var(--color-text-muted);
+  display:       flex;
+  align-items:   center;
+  justify-content: center;
+  font-size:     .85rem;
+  font-weight:   700;
+  position:      relative;
+  z-index:       1;
+}
+.stepActive .stepCircle { background: var(--color-primary); color: #fff; }
+.stepDone   .stepCircle { background: var(--color-primary); color: #fff; }
+.stepLabel { font-size: .75rem; color: var(--color-text-muted); font-weight: 600; }
+.stepActive .stepLabel  { color: var(--color-primary); }
+
+.formCard   { padding: 2rem; }
+.stepTitle  { font-size: 1.3rem; font-weight: 800; margin-bottom: 1.5rem; }
+.grid2      { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; margin-bottom: 1rem; }
+.btnRow     { display: flex; gap: .75rem; justify-content: flex-end; margin-top: 1.5rem; }
+.error      { padding: .75rem 1rem; background: #fee2e2; color: #991b1b; border-radius: var(--radius); font-size: .875rem; margin-top: .75rem; }
+.hint       { font-size: .875rem; color: var(--color-text-muted); padding: .5rem 0; }
+
+/* Servicios grid */
+.serviciosGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .75rem; margin-bottom: 1rem; }
+.servicioBtn {
+  display:        flex;
+  flex-direction: column;
+  gap:            .25rem;
+  padding:        1rem;
+  border:         2px solid var(--color-border);
+  border-radius:  var(--radius);
+  background:     var(--color-surface);
+  cursor:         pointer;
+  text-align:     left;
+  transition:     all .15s;
+}
+.servicioBtn:hover        { border-color: var(--color-primary); }
+.servicioBtnActive        { border-color: var(--color-primary); background: rgba(14,165,233,.08); }
+.precio { font-size: .85rem; color: var(--color-primary); font-weight: 700; margin-top: .25rem; }
+.desc   { font-size: .8rem; color: var(--color-text-muted); }
+
+/* Horas */
+.horasGrid  { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
+.horaBtn {
+  padding:       .4rem .85rem;
+  border:        1.5px solid var(--color-border);
+  border-radius: var(--radius);
+  background:    var(--color-surface);
+  cursor:        pointer;
+  font-size:     .9rem;
+  font-weight:   600;
+  transition:    all .15s;
+}
+.horaBtn:hover       { border-color: var(--color-primary); color: var(--color-primary); }
+.horaBtnActive       { background: var(--color-primary); color: #fff; border-color: var(--color-primary); }
+
+/* Resumen */
+.resumen {
+  background:    var(--color-bg);
+  border-radius: var(--radius);
+  padding:       1.25rem;
+  margin-top:    1.25rem;
+  display:       flex;
+  flex-direction:column;
+  gap:           .5rem;
+  font-size:     .9rem;
+}
+.resumen h3  { font-size: 1rem; font-weight: 700; margin-bottom: .25rem; }
+.resumen div { display: flex; justify-content: space-between; }
+.resumen span { color: var(--color-text-muted); }
+
+/* Success */
+.success     { text-align: center; padding: 1rem 0; }
+.successIcon { font-size: 3rem; margin-bottom: 1rem; }
+.success h2  { font-size: 1.5rem; font-weight: 800; margin-bottom: .5rem; }
+.success p   { color: var(--color-text-muted); margin-bottom: 1.5rem; }
+
+@media (max-width: 520px) {
+  .grid2 { grid-template-columns: 1fr; }
+  .grid2 > * { grid-column: 1 !important; }
+}

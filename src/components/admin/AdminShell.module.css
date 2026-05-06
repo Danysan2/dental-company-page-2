@@ -1,0 +1,100 @@
+.shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  background:    #0f172a;
+  color:         #e2e8f0;
+  display:       flex;
+  flex-direction: column;
+  padding:       1.5rem 1rem;
+  position:      sticky;
+  top:           0;
+  height:        100vh;
+}
+
+.logo {
+  display:     flex;
+  align-items: center;
+  gap:         .5rem;
+  padding:     .5rem .75rem 1.5rem;
+  font-size:   1.2rem;
+  font-weight: 800;
+  color:       #fff;
+}
+
+.logoIcon { font-size: 1.4rem; }
+.logoText em { color: var(--color-primary); font-style: normal; }
+
+.nav {
+  display:        flex;
+  flex-direction: column;
+  gap:            .25rem;
+  flex:           1;
+}
+
+.navItem {
+  display:       flex;
+  align-items:   center;
+  gap:           .75rem;
+  padding:       .65rem .85rem;
+  border-radius: var(--radius);
+  font-size:     .9rem;
+  font-weight:   500;
+  color:         #94a3b8;
+  transition:    all .15s;
+}
+.navItem:hover    { background: rgba(255,255,255,.07); color: #fff; }
+.navItemActive    { background: rgba(14,165,233,.2); color: var(--color-primary) !important; font-weight: 700; }
+.navIcon          { font-size: 1rem; width: 1.25rem; text-align: center; }
+
+.userSection {
+  border-top:  1px solid rgba(255,255,255,.1);
+  padding-top: 1rem;
+  display:     flex;
+  flex-direction: column;
+  gap:         .5rem;
+}
+
+.userInfo {
+  display:        flex;
+  flex-direction: column;
+  padding:        .5rem .75rem;
+}
+.userName { font-size: .9rem; font-weight: 600; color: #f1f5f9; }
+.userRole  { font-size: .75rem; color: #64748b; text-transform: capitalize; }
+
+.logoutBtn { color: #94a3b8 !important; justify-content: flex-start; }
+.logoutBtn:hover { color: #ef4444 !important; background: rgba(239,68,68,.1) !important; }
+
+/* Main */
+.main {
+  padding:    2rem;
+  overflow-y: auto;
+  min-height: 100vh;
+}
+
+@media (max-width: 768px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar {
+    position:  relative;
+    height:    auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    padding:   1rem;
+  }
+  .logo { padding-bottom: 0; }
+  .nav { flex-direction: row; flex-wrap: wrap; }
+  .userSection { border-top: none; border-left: 1px solid rgba(255,255,255,.1); padding-top: 0; padding-left: 1rem; }
+  .main { padding: 1rem; }
+}

@@ -1,0 +1,82 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  doctora
+  recepcionista
+}
+
+enum EstadoCita {
+  programada
+  completada
+  cancelada
+  no_asistio
+}
+
+model Staff {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  nombre    String
+  password  String
+  rol       Rol      @default(recepcionista)
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("staff")
+}
+
+model Cliente {
+  id        String   @id @default(uuid())
+  nombre    String
+  cedula    String?  @unique
+  telefono  String?
+  correo    String?
+  notas     String?
+  activo    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  citas     Cita[]
+
+  @@map("clientes")
+}
+
+model Servicio {
+  id          String   @id @default(uuid())
+  nombre      String
+  descripcion String?
+  precio      Int      @default(0)
+  duracion    Int      @default(60)
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  citas       Cita[]
+
+  @@map("servicios")
+}
+
+model Cita {
+  id          String     @id @default(uuid())
+  clienteId   String     @map("cliente_id")
+  servicioId  String     @map("servicio_id")
+  fecha       DateTime   @db.Date
+  hora        String
+  estado      EstadoCita @default(programada)
+  notas       String?
+  precio      Int?
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  cliente     Cliente    @relation(fields: [clienteId], references: [id])
+  servicio    Servicio   @relation(fields: [servicioId], references: [id])
+
+  @@map("citas")
+}

@@ -1,0 +1,10 @@
+.page      { padding: 4rem 0; }
+.container { max-width: 1000px; margin: 0 auto; padding: 0 1.5rem; }
+.hero      { text-align: center; margin-bottom: 3rem; }
+.hero h1   { font-size: 2.5rem; font-weight: 900; margin-bottom: 1rem; }
+.hero p    { color: var(--color-text-muted); font-size: 1.1rem; }
+.mision    { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
+.mision h2 { font-size: 1.1rem; margin-bottom: .75rem; }
+.mision ul { padding-left: 1.25rem; display: flex; flex-direction: column; gap: .35rem; font-size: .95rem; color: var(--color-text-muted); }
+.cta       { text-align: center; padding: 2rem 0; }
+.cta h2    { font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem; }
