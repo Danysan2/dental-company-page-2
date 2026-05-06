@@ -1,52 +1,59 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import styles from './Navbar.module.css'
-
-const NAV_LINKS = [
-  { href: '/',          label: 'Inicio'    },
-  { href: '/nosotros',  label: 'Nosotros'  },
-  { href: '/servicios', label: 'Servicios' },
-  { href: '/citas',     label: 'Citas'     },
-]
+import './Navbar.css'
 
 export default function Navbar() {
+  const [scrolled,  setScrolled]  = useState(false)
+  const [menuOpen,  setMenuOpen]  = useState(false)
   const pathname = usePathname()
-  const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 40)
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
-    <header className={styles.header}>
-      <nav className={styles.nav}>
-        <Link href="/" className={styles.logo}>
-          <span className={styles.logoIcon}>🦷</span>
-          <span className={styles.logoText}>Dental <em>Company</em></span>
+    <header className={`navbar ${scrolled ? 'navbar--scrolled' : ''}`}>
+      <div className="navbar__inner container">
+        {/* Logo */}
+        <Link href="/" className="navbar__logo" onClick={() => setMenuOpen(false)}>
+          <img src="/logo-png.png" alt="Dental Company" className="navbar__logo-img" />
+          <span className="navbar__logo-text">
+            Dental <em>Company</em>
+          </span>
         </Link>
 
-        <ul className={`${styles.links} ${open ? styles.linksOpen : ''}`}>
-          {NAV_LINKS.map(l => (
-            <li key={l.href}>
-              <Link
-                href={l.href}
-                className={`${styles.link} ${pathname === l.href ? styles.linkActive : ''}`}
-                onClick={() => setOpen(false)}
-              >
-                {l.label}
-              </Link>
-            </li>
-          ))}
-          <li>
-            <Link href="/citas" className="btn btn-primary btn-sm" onClick={() => setOpen(false)}>
-              Agendar cita
-            </Link>
-          </li>
-        </ul>
+        {/* Desktop nav */}
+        <nav className="navbar__links">
+          <Link href="/"               className={pathname === '/'               ? 'active' : ''}>Inicio</Link>
+          <Link href="/sobre-nosotros" className={pathname === '/sobre-nosotros' ? 'active' : ''}>Nosotros</Link>
+          <Link href="/citas"          className={pathname === '/citas'          ? 'active' : ''}>Citas</Link>
+          <Link href="/login" className="btn btn-primary navbar__cta">Iniciar sesión</Link>
+        </nav>
 
-        <button className={styles.burger} onClick={() => setOpen(o => !o)} aria-label="Menú">
-          {open ? '✕' : '☰'}
+        {/* Mobile hamburger */}
+        <button
+          className={`navbar__burger ${menuOpen ? 'open' : ''}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+          aria-label="Menú"
+        >
+          <span /><span /><span />
         </button>
-      </nav>
+      </div>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <nav className="navbar__mobile" onClick={() => setMenuOpen(false)}>
+          <Link href="/">Inicio</Link>
+          <Link href="/sobre-nosotros">Nosotros</Link>
+          <Link href="/citas">Agendar Cita</Link>
+          <Link href="/login" className="mobile-login-btn">Iniciar sesión</Link>
+        </nav>
+      )}
     </header>
   )
 }
