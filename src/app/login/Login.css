@@ -1,0 +1,290 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background: var(--color-bg);
+  position: relative;
+  overflow: hidden;
+  gap: 1.5rem;
+}
+
+.login-page__bg { position: absolute; inset: 0; pointer-events: none; }
+
+.login-bg-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.5;
+}
+
+.login-bg-blob--1 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #DECCBE 0%, transparent 70%);
+  top: -150px;
+  right: -150px;
+}
+
+.login-bg-blob--2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, #C2D1D3 0%, transparent 70%);
+  bottom: -100px;
+  left: -100px;
+}
+
+/* ── Card ── */
+.login-card {
+  position: relative;
+  z-index: 1;
+  background: var(--color-off-white);
+  border: 1px solid var(--color-warm-2);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* Header */
+.login-card__header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-warm-2);
+}
+
+.login-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  margin-bottom: 0.75rem;
+}
+
+.login-logo__text {
+  font-family: var(--font-title);
+  font-size: 1.15rem;
+  color: var(--color-dark);
+  line-height: 1;
+}
+
+.login-logo__text em {
+  font-style: italic;
+  color: var(--color-accent);
+}
+
+.login-card__subtitle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* Form */
+.login-form__title {
+  font-size: 1.75rem;
+  font-weight: normal;
+  margin-bottom: 1.75rem;
+  color: var(--color-dark);
+}
+
+/* Input with icon */
+.input-with-icon {
+  position: relative;
+}
+
+.input-with-icon svg:first-child {
+  position: absolute;
+  left: 0.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 17px;
+  height: 17px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.input-with-icon input {
+  padding-left: 2.6rem !important;
+}
+
+.input-with-icon--right input {
+  padding-right: 2.6rem !important;
+}
+
+.toggle-pass {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  padding: 0.2rem;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition);
+}
+
+.toggle-pass:hover { color: var(--color-accent); }
+.toggle-pass svg   { width: 17px; height: 17px; }
+
+/* Error */
+.login-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  color: #991b1b;
+  margin-bottom: 0.5rem;
+}
+
+.login-error svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Submit button */
+.login-submit {
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.9rem;
+  font-size: 0.9rem;
+}
+
+.btn-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(247, 246, 245, 0.4);
+  border-top-color: var(--color-off-white);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Footer */
+.login-card__footer {
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-warm-2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.back-link {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--color-accent);
+  text-decoration: none;
+  transition: gap var(--transition);
+}
+
+.back-link:hover { gap: 0.5rem; }
+
+.login-card__note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ── Role badges (dev only) ── */
+.login-roles {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.login-role {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: rgba(241, 236, 230, 0.8);
+  border: 1px solid var(--color-warm-2);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 1.25rem;
+  backdrop-filter: blur(4px);
+}
+
+.login-role__icon {
+  width: 36px;
+  height: 36px;
+  background: var(--color-warm-3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-accent);
+  flex-shrink: 0;
+}
+
+.login-role__icon svg { width: 18px; height: 18px; }
+
+.login-role div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.login-role__title {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--color-dark);
+}
+
+.login-role__label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+/* ── Animations ── */
+.animate-fade-up {
+  animation: fadeUp 0.5s ease both;
+}
+
+.delay-2 { animation-delay: 0.15s; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Responsive ── */
+@media (max-width: 520px) {
+  .login-page { padding: 1.5rem 0.75rem; gap: 1rem; justify-content: flex-start; padding-top: 2rem; }
+
+  .login-bg-blob--1 { width: 220px; height: 220px; top: -70px; right: -70px; filter: blur(50px); }
+  .login-bg-blob--2 { width: 180px; height: 180px; bottom: -60px; left: -60px; filter: blur(50px); }
+
+  .login-card { padding: 1.5rem 1.125rem; border-radius: var(--radius-lg, 22px); }
+  .login-card__header { margin-bottom: 1.25rem; padding-bottom: 1rem; }
+  .login-form__title { font-size: 1.45rem; margin-bottom: 1.25rem; }
+
+  .login-card__footer { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+
+  .login-roles { flex-direction: column; align-items: stretch; width: 100%; max-width: 440px; }
+  .login-role  { justify-content: flex-start; padding: 0.6rem 1rem; }
+}
