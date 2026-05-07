@@ -187,8 +187,8 @@ export default function CitasPublicClient() {
   // Cargar servicios al montar
   useEffect(() => {
     fetch('/api/servicios')
-      .then(r => r.json())
-      .then(data => setServicios(data ?? []))
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then(data => setServicios(Array.isArray(data) ? data : []))
       .catch(err => {
         setServicios([])
         setError('No pudimos cargar los servicios: ' + (err?.message ?? 'Error desconocido'))

@@ -3,7 +3,15 @@ import type { NextRequest } from 'next/server'
 import { getSessionFromRequest } from './lib/auth'
 
 const PUBLIC_PATHS = ['/', '/nosotros', '/servicios', '/citas', '/contacto', '/login']
-const API_PUBLIC   = ['/api/auth/login', '/api/auth/logout']
+const API_PUBLIC   = [
+  '/api/auth/login',
+  '/api/auth/logout',
+  '/api/servicios',
+  '/api/citas/disponibilidad',
+]
+
+// POST-only public routes (public booking flow)
+const API_PUBLIC_POST = ['/api/clientes', '/api/citas']
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
@@ -20,6 +28,11 @@ export async function middleware(req: NextRequest) {
 
   // Allow public API routes
   if (API_PUBLIC.some(p => pathname === p)) {
+    return NextResponse.next()
+  }
+
+  // Allow public booking POSTs (unauthenticated users creating citas/clientes)
+  if (API_PUBLIC_POST.some(p => pathname === p) && req.method === 'POST') {
     return NextResponse.next()
   }
 

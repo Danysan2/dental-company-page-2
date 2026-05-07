@@ -337,8 +337,8 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
       })
       .catch(() => {
         if (version !== slotVersionRef.current) return
-        setHorasDisp([])
-        setErr('Error consultando disponibilidad. Intenta de nuevo.')
+        setHorasDisp(HORARIOS)
+        setErr('No se pudo verificar disponibilidad. Se muestran todos los horarios.')
       })
       .finally(() => { if (version === slotVersionRef.current) setLoadHoras(false) })
   }, [form.fecha, mode, cita?.hora])
@@ -485,8 +485,8 @@ function ReagendarModal({ cita, onClose, onSaved }: {
       .then(data => { if (version === slotVersionRef.current) setHorasDisp(data.disponibles ?? []) })
       .catch(() => {
         if (version !== slotVersionRef.current) return
-        setHorasDisp([])
-        setErr('Error consultando disponibilidad. Intenta de nuevo.')
+        setHorasDisp(HORARIOS)
+        setErr('No se pudo verificar disponibilidad. Se muestran todos los horarios.')
       })
       .finally(() => { if (version === slotVersionRef.current) setLoadHoras(false) })
   }, [fecha])
