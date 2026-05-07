@@ -64,11 +64,14 @@ COPY --from=builder /app/node_modules/@prisma           ./node_modules/@prisma
 COPY --from=builder /app/node_modules/prisma            ./node_modules/prisma
 COPY --from=builder /app/node_modules/.bin/prisma       ./node_modules/.bin/prisma
 
+# Entrypoint script
+COPY docker-entrypoint.sh ./docker-entrypoint.sh
+RUN chmod +x ./docker-entrypoint.sh
+
 USER nextjs
 
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Apply migrations → seed if DB is empty → start server
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node -e \"const{PrismaClient}=require('@prisma/client');const p=new PrismaClient();p.staff.count().then(n=>{if(n===0){console.log('Seeding...');require('child_process').execSync('node prisma/seed.js',{stdio:'inherit'})}else{console.log('DB already seeded, skipping.')}}).finally(()=>p.\$disconnect())\" && node server.js"]
+CMD ["sh", "docker-entrypoint.sh"]
