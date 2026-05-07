@@ -4,12 +4,7 @@ export const HORARIOS = [
   '16:00', '17:00',
 ]
 
-export const ESTADOS = [
-  { value: 'programada',  label: 'Programada',   color: '#3b82f6' },
-  { value: 'completada',  label: 'Completada',   color: '#22c55e' },
-  { value: 'cancelada',   label: 'Cancelada',    color: '#ef4444' },
-  { value: 'no_asistio',  label: 'No asistió',   color: '#f97316' },
-]
+export const ESTADOS = ['programada', 'completada', 'cancelada', 'no_asistio']
 
 export function formatCOP(amount: number): string {
   return new Intl.NumberFormat('es-CO', {

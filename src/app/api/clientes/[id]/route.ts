@@ -6,6 +6,7 @@ import { getSession } from '@/lib/auth'
 import { Unauthorized, NotFound, BadRequest, ServerError } from '@/lib/apiErrors'
 import { validarNombre, validarCedula, validarTelefono, validarCorreo, sanitizarTexto } from '@/lib/validators'
 
+// GET /api/clientes/:id/historial — returns appointment history
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
@@ -18,15 +19,26 @@ export async function GET(
       where: { id: params.id },
       include: {
         citas: {
-          include: { servicio: true },
+          include: { servicio: { select: { nombre: true } } },
           orderBy: { fecha: 'desc' },
-          take: 20,
+          take: 50,
         },
       },
     })
 
     if (!cliente) return NotFound('Cliente no encontrado')
-    return NextResponse.json(cliente)
+
+    // Return flat historial matching ClienteDrawer expectations
+    const historial = cliente.citas.map(c => ({
+      id:       c.id,
+      servicio: c.servicio.nombre,
+      fecha:    c.fecha.toISOString().slice(0, 10),
+      hora:     c.hora,
+      estado:   c.estado,
+      precio:   c.precio ?? 0,
+    }))
+
+    return NextResponse.json(historial)
   } catch (err) {
     console.error('[GET /api/clientes/:id]', err)
     return ServerError()

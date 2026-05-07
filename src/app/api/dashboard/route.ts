@@ -4,81 +4,93 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getSession } from '@/lib/auth'
 import { Unauthorized, ServerError } from '@/lib/apiErrors'
-import { today, startOfMonth, daysFromNow } from '@/lib/helpers'
+import { today, startOfMonth, daysAgo } from '@/lib/helpers'
 
 export async function GET() {
   try {
     const session = await getSession()
     if (!session) return Unauthorized()
 
+    const todayStr    = today()
+    const monthStart  = startOfMonth()
+    const hace6meses  = (() => {
+      const d = new Date()
+      d.setDate(1)
+      d.setMonth(d.getMonth() - 5)
+      return d.toISOString().slice(0, 10)
+    })()
+    const hace6dias = daysAgo(6)
+
     const [
-      totalCitasHoy,
+      totalClientes,
       citasMes,
-      ingresosMes,
-      citasProximas,
+      ingresosMesAgg,
+      canceladasMes,
+      proximasCitas,
       distribEstados,
       topServicios,
+      citasUltimos7dias,
+      citasUltimos6meses,
     ] = await Promise.all([
-      // Citas de hoy
+      prisma.cliente.count({ where: { activo: true } }),
+
       prisma.cita.count({
-        where: {
-          fecha:  new Date(today()),
-          estado: { not: 'cancelada' },
-        },
+        where: { fecha: { gte: new Date(monthStart) }, estado: { not: 'cancelada' } },
       }),
 
-      // Citas del mes (no canceladas)
-      prisma.cita.count({
-        where: {
-          fecha:  { gte: new Date(startOfMonth()) },
-          estado: { not: 'cancelada' },
-        },
-      }),
-
-      // Ingresos del mes (completadas)
       prisma.cita.aggregate({
-        where: {
-          fecha:  { gte: new Date(startOfMonth()) },
-          estado: 'completada',
-        },
+        where: { fecha: { gte: new Date(monthStart) }, estado: 'completada' },
         _sum: { precio: true },
       }),
 
-      // Próximas 5 citas
+      prisma.cita.count({
+        where: { fecha: { gte: new Date(monthStart) }, estado: 'cancelada' },
+      }),
+
       prisma.cita.findMany({
         where: {
-          fecha:  { gte: new Date(today()), lte: new Date(daysFromNow(7)) },
-          estado: 'programada',
+          fecha:  { gte: new Date(todayStr) },
+          estado: { not: 'cancelada' },
         },
         include: {
-          cliente:  { select: { nombre: true, telefono: true } },
+          cliente:  { select: { nombre: true } },
           servicio: { select: { nombre: true } },
         },
         orderBy: [{ fecha: 'asc' }, { hora: 'asc' }],
-        take: 8,
+        take: 6,
       }),
 
-      // Distribución por estado (mes actual)
       prisma.cita.groupBy({
         by: ['estado'],
-        where: { fecha: { gte: new Date(startOfMonth()) } },
         _count: { estado: true },
       }),
 
-      // Top 5 servicios del mes
       prisma.cita.groupBy({
         by: ['servicioId'],
-        where: {
-          fecha:  { gte: new Date(startOfMonth()) },
-          estado: { not: 'cancelada' },
-        },
+        where: { estado: { not: 'cancelada' } },
         _count: { servicioId: true },
         orderBy: { _count: { servicioId: 'desc' } },
         take: 5,
       }),
+
+      // Citas últimos 7 días (para bar chart semanal)
+      prisma.cita.findMany({
+        where: {
+          fecha:  { gte: new Date(hace6dias), lte: new Date(todayStr) },
+        },
+        select: { fecha: true, estado: true },
+      }),
+
+      // Citas últimos 6 meses (para gráfico ingresos mensuales)
+      prisma.cita.findMany({
+        where: {
+          fecha: { gte: new Date(hace6meses) },
+        },
+        select: { fecha: true, estado: true, precio: true },
+      }),
     ])
 
-    // Enriquecer top servicios con nombre
+    // Enriquecer top servicios con nombres
     const servicioIds = topServicios.map(s => s.servicioId)
     const servicios   = await prisma.servicio.findMany({
       where: { id: { in: servicioIds } },
@@ -86,20 +98,38 @@ export async function GET() {
     })
     const servicioMap = Object.fromEntries(servicios.map(s => [s.id, s.nombre]))
 
+    // Distribución de estados (map to original shape)
+    const distribMap: Record<string, number> = {}
+    distribEstados.forEach(e => { distribMap[e.estado] = e._count.estado })
+
     return NextResponse.json({
       kpis: {
-        citasHoy:     totalCitasHoy,
-        citasMes,
-        ingresosMes:  ingresosMes._sum.precio ?? 0,
+        total_clientes:      totalClientes,
+        citas_este_mes:      citasMes,
+        ingresos_este_mes:   ingresosMesAgg._sum.precio ?? 0,
+        canceladas_este_mes: canceladasMes,
       },
-      proximasCitas:   citasProximas,
-      distribEstados:  distribEstados.map(e => ({
-        estado: e.estado,
-        total:  e._count.estado,
+      proximas: proximasCitas.map(c => ({
+        id:             c.id,
+        cliente_nombre: c.cliente.nombre,
+        servicio:       c.servicio.nombre,
+        fecha:          c.fecha.toISOString().slice(0, 10),
+        hora:           c.hora,
+        estado:         c.estado,
       })),
-      topServicios:    topServicios.map(s => ({
+      distribucion: distribMap,
+      top_servicios: topServicios.map(s => ({
         nombre: servicioMap[s.servicioId] ?? s.servicioId,
         total:  s._count.servicioId,
+      })),
+      citas_semana: citasUltimos7dias.map(c => ({
+        fecha:  c.fecha.toISOString().slice(0, 10),
+        estado: c.estado,
+      })),
+      citas_meses: citasUltimos6meses.map(c => ({
+        fecha:  c.fecha.toISOString().slice(0, 10),
+        estado: c.estado,
+        precio: c.precio ?? 0,
       })),
     })
   } catch (err) {

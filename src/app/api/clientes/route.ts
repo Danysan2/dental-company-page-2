@@ -19,18 +19,50 @@ export async function GET(req: NextRequest) {
         activo: true,
         ...(q ? {
           OR: [
-            { nombre:  { contains: q, mode: 'insensitive' } },
-            { cedula:  { contains: q } },
-            { telefono:{ contains: q } },
-            { correo:  { contains: q, mode: 'insensitive' } },
+            { nombre:   { contains: q, mode: 'insensitive' } },
+            { cedula:   { contains: q } },
+            { telefono: { contains: q } },
+            { correo:   { contains: q, mode: 'insensitive' } },
           ],
         } : {}),
       },
+      include: {
+        citas: {
+          select: { estado: true, precio: true },
+        },
+      },
       orderBy: { nombre: 'asc' },
-      take: 100,
+      take: 500,
     })
 
-    return NextResponse.json(clientes)
+    // Enrich with aggregated stats matching original AdminClientes expectations
+    const enriched = clientes.map(c => {
+      const total_citas         = c.citas.length
+      const citas_completadas   = c.citas.filter(x => x.estado === 'completada').length
+      const citas_canceladas    = c.citas.filter(x => x.estado === 'cancelada').length
+      const citas_activas       = c.citas.filter(x => x.estado === 'programada').length
+      const ingresos_generados  = c.citas
+        .filter(x => x.estado === 'completada')
+        .reduce((s, x) => s + (x.precio ?? 0), 0)
+
+      return {
+        id:                c.id,
+        nombre:            c.nombre,
+        cedula:            c.cedula    ?? '',
+        telefono:          c.telefono  ?? '',
+        correo:            c.correo    ?? '',
+        notas:             c.notas     ?? '',
+        activo:            c.activo,
+        created_at:        c.createdAt,
+        total_citas,
+        citas_completadas,
+        citas_canceladas,
+        citas_activas,
+        ingresos_generados,
+      }
+    })
+
+    return NextResponse.json(enriched)
   } catch (err) {
     console.error('[GET /api/clientes]', err)
     return ServerError()
@@ -39,9 +71,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getSession()
-    if (!session) return Unauthorized()
-
+    // Allow both authed staff and anonymous public booking
     const body = await req.json()
     const nombre = sanitizarTexto(body.nombre ?? '')
 
