@@ -51,7 +51,7 @@ model Cliente {
 
 model Servicio {
   id          String   @id @default(uuid())
-  nombre      String
+  nombre      String   @unique
   descripcion String?
   precio      Int      @default(0)
   duracion    Int      @default(60)

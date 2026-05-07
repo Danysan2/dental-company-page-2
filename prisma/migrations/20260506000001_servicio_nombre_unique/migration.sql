@@ -1,0 +1,2 @@
+-- This index already exists from the initial migration
+-- Added @unique to Servicio.nombre in schema to expose it to Prisma Client
