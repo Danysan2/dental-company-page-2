@@ -24,6 +24,9 @@
     "react-dom": "^18.3.1",
     "recharts": "^2.12.7"
   },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20.16.11",
