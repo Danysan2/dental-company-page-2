@@ -421,7 +421,7 @@ export default function AdminClientes() {
         let va: string | number, vb: string | number
         if (sortKey === 'citas')         { va = a.total_citas ?? 0;          vb = b.total_citas ?? 0 }
         else if (sortKey === 'ingresos') { va = a.ingresos_generados ?? 0;   vb = b.ingresos_generados ?? 0 }
-        else { va = (a as Record<string, string>)[sortKey] ?? ''; vb = (b as Record<string, string>)[sortKey] ?? '' }
+        else { va = (a as unknown as Record<string, string>)[sortKey] ?? ''; vb = (b as unknown as Record<string, string>)[sortKey] ?? '' }
         const cmp = va < vb ? -1 : va > vb ? 1 : 0
         return sortDir === 'asc' ? cmp : -cmp
       })
