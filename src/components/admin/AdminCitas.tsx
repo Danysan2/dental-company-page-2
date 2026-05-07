@@ -696,7 +696,7 @@ export default function AdminCitas() {
       .sort((a, b) => {
         let va: string, vb: string
         if (sortKey === 'nombre') { va = a.cliente_nombre ?? ''; vb = b.cliente_nombre ?? '' }
-        else { va = (a as Record<string, string>)[sortKey] ?? ''; vb = (b as Record<string, string>)[sortKey] ?? '' }
+        else { va = (a as unknown as Record<string, string>)[sortKey] ?? ''; vb = (b as unknown as Record<string, string>)[sortKey] ?? '' }
         const cmp = va < vb ? -1 : va > vb ? 1 : 0
         return sortDir === 'asc' ? cmp : -cmp
       })
