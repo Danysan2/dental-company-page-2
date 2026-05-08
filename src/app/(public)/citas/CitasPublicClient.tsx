@@ -178,16 +178,6 @@ const INITIAL_FORM = {
   fecha: '', hora: '', notas: '',
 }
 
-const RATE_LIMIT_KEY = 'olinky_last_booking'
-const RATE_LIMIT_MS  = 3 * 60 * 1000
-
-function getRateLimitRemaining() {
-  try {
-    const last = parseInt(localStorage.getItem(RATE_LIMIT_KEY) ?? '0', 10)
-    const elapsed = Date.now() - last
-    return elapsed < RATE_LIMIT_MS ? Math.ceil((RATE_LIMIT_MS - elapsed) / 1000) : 0
-  } catch { return 0 }
-}
 
 export default function CitasPublicClient() {
   const [step,           setStep]           = useState(0)
@@ -195,11 +185,10 @@ export default function CitasPublicClient() {
   const [servicios,      setServicios]      = useState<Servicio[]>([])
   const [loadingServ,    setLoadingServ]    = useState(true)
   const [availableSlots, setAvailableSlots] = useState<string[] | null>(null)
-  const [loading,        setLoading]        = useState(false)
-  const [success,        setSuccess]        = useState<string | null>(null) // cita_id
-  const [error,          setError]          = useState('')
-  const [rateLimitSecs,  setRateLimitSecs]  = useState(() => getRateLimitRemaining())
-  const [fieldErrors,    setFieldErrors]    = useState<Record<string,string>>({})
+  const [loading,     setLoading]     = useState(false)
+  const [success,     setSuccess]     = useState<string | null>(null) // cita_id
+  const [error,       setError]       = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string,string>>({})
   const slotVersionRef  = useRef(0)
   const submitInFlight  = useRef(false)
 
@@ -235,17 +224,6 @@ export default function CitasPublicClient() {
         }
       })
   }, [form.fecha, form.duracion_minutos])
-
-  // Countdown del rate limit
-  useEffect(() => {
-    if (rateLimitSecs <= 0) return
-    const id = setInterval(() => {
-      const remaining = getRateLimitRemaining()
-      setRateLimitSecs(remaining)
-      if (remaining <= 0) clearInterval(id)
-    }, 1000)
-    return () => clearInterval(id)
-  }, [rateLimitSecs])
 
   const update = (field: string, value: string | number) => setForm(f => ({ ...f, [field]: value }))
 
@@ -298,15 +276,6 @@ export default function CitasPublicClient() {
   const handleSubmit = async () => {
     console.log('[handleSubmit] called, inFlight=', submitInFlight.current)
     if (submitInFlight.current) { console.log('[handleSubmit] blocked by inFlight'); return }
-
-    const remaining = getRateLimitRemaining()
-    console.log('[handleSubmit] rateLimitRemaining=', remaining)
-    if (remaining > 0) {
-      setError(`Por favor espera ${remaining} segundo${remaining !== 1 ? 's' : ''} antes de enviar otra solicitud.`)
-      setRateLimitSecs(remaining)
-      return
-    }
-
     submitInFlight.current = true
     setLoading(true)
     setError('')
@@ -343,8 +312,6 @@ export default function CitasPublicClient() {
         errMsg(d?.detail ?? d?.error ?? 'Error desconocido')
 
       if (res.status === 201) {
-        try { localStorage.setItem(RATE_LIMIT_KEY, String(Date.now())) } catch { /* ignorar */ }
-        setRateLimitSecs(Math.ceil(RATE_LIMIT_MS / 1000))
         setSuccess(data?.cita_id ?? 'ok')
         return
       }
@@ -610,10 +577,10 @@ export default function CitasPublicClient() {
             ) : (
               <button
                 className="btn btn-primary"
-                disabled={loading || rateLimitSecs > 0}
+                disabled={loading}
                 onClick={handleSubmit}
               >
-                {loading ? 'Enviando…' : rateLimitSecs > 0 ? `Espera ${rateLimitSecs}s…` : 'Confirmar cita'}
+                {loading ? 'Enviando…' : 'Confirmar cita'}
                 {!loading && rateLimitSecs <= 0 && (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
                 )}
