@@ -283,7 +283,7 @@ export default function CitasPublicClient() {
     const hora_fin = calcularHoraFin(form.hora, form.duracion_minutos)
     const payload = {
       nombre:           form.nombre.trim(),
-      telefono:         `57${form.telefono.trim()}`,
+      telefono:         form.telefono.trim(),
       servicio_id:      form.servicio_id,
       servicio_nombre:  form.servicio_nombre,
       duracion_minutos: form.duracion_minutos,
@@ -559,7 +559,7 @@ export default function CitasPublicClient() {
           {/* Navigation */}
           <div className="appt-nav">
             {step > 0 && (
-              <button className="btn btn-ghost appt-nav__back" onClick={() => { setStep(s => s - 1); setError('') }}>
+              <button type="button" className="btn btn-ghost appt-nav__back" onClick={() => { setStep(s => s - 1); setError('') }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
                 Atrás
               </button>
@@ -567,6 +567,7 @@ export default function CitasPublicClient() {
             <div style={{ flex: 1 }} />
             {step < 4 ? (
               <button
+                type="button"
                 className="btn btn-primary"
                 disabled={!canAdvance()}
                 onClick={handleNext}
@@ -576,6 +577,7 @@ export default function CitasPublicClient() {
               </button>
             ) : (
               <button
+                type="button"
                 className="btn btn-primary"
                 disabled={loading}
                 onClick={handleSubmit}
