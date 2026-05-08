@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import { HORARIOS } from '@/lib/helpers'
 import { validarNombre, validarCedula, validarTelefono, validarCorreo } from '@/lib/validators'
 import './Appointments.css'
+
+const CHATBOT_URL = process.env.NEXT_PUBLIC_CHATBOT_URL ?? 'https://dentalbot.clouddec.site'
 
 const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 const MONTHS_ES = [
@@ -14,6 +15,14 @@ const MONTHS_ES = [
 
 function toYMD(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+}
+
+function calcularHoraFin(horaInicio: string, duracionMinutos: number): string {
+  const [h, m] = horaInicio.split(':').map(Number)
+  const totalMin = h * 60 + m + duracionMinutos
+  const hf = String(Math.floor(totalMin / 60)).padStart(2, '0')
+  const mf = String(totalMin % 60).padStart(2, '0')
+  return `${hf}:${mf}`
 }
 
 // ── Mini Calendar ──────────────────────────────────────────
@@ -93,7 +102,7 @@ function TimeSlotPicker({ selectedTime, onSelect, availableSlots }: {
   onSelect: (h: string) => void
   availableSlots: string[] | null
 }) {
-  if (!availableSlots) {
+  if (availableSlots === null) {
     return (
       <div className="slots slots--loading">
         <div className="slot-spinner" />
@@ -102,23 +111,28 @@ function TimeSlotPicker({ selectedTime, onSelect, availableSlots }: {
     )
   }
 
+  if (availableSlots.length === 0) {
+    return (
+      <div className="slots slots--empty">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <p>Sin disponibilidad para esta fecha.<br/>Por favor elige otro día.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="slots">
-      {HORARIOS.map(hora => {
-        const available  = availableSlots.includes(hora)
-        const isSelected = selectedTime === hora
-        return (
-          <button
-            key={hora}
-            className={`slot${!available ? ' slot--taken' : ''}${isSelected ? ' slot--selected' : ''}`}
-            disabled={!available}
-            onClick={() => available && onSelect(hora)}
-          >
-            {hora}
-            {!available && <span className="slot__taken-label">Ocupado</span>}
-          </button>
-        )
-      })}
+      {availableSlots.map(hora => (
+        <button
+          key={hora}
+          className={`slot${selectedTime === hora ? ' slot--selected' : ''}`}
+          onClick={() => onSelect(hora)}
+        >
+          {hora}
+        </button>
+      ))}
     </div>
   )
 }
@@ -132,7 +146,6 @@ function StepBar({ step }: { step: number }) {
   const pct = Math.round((step / (steps.length - 1)) * 100)
   return (
     <div className="step-bar">
-      {/* Línea de fondo */}
       <div className="step-bar__track" aria-hidden="true">
         <div className="step-bar__fill" style={{ width: `${pct}%` }} />
       </div>
@@ -150,17 +163,23 @@ function StepBar({ step }: { step: number }) {
   )
 }
 
-// ── Main Component ──────────────────────────────────────────
-interface Servicio { id: string; nombre: string; precio?: number | null }
+// ── Types ───────────────────────────────────────────────────
+interface Servicio {
+  id: string
+  nombre: string
+  duracion_minutos: number
+  precio: number
+}
 
+// ── Main Component ──────────────────────────────────────────
 const INITIAL_FORM = {
   nombre: '', cedula: '', telefono: '', correo: '',
-  servicio_id: '', servicio: '', precio: 0,
+  servicio_id: '', servicio_nombre: '', duracion_minutos: 0, precio: 0,
   fecha: '', hora: '', notas: '',
 }
 
 const RATE_LIMIT_KEY = 'olinky_last_booking'
-const RATE_LIMIT_MS  = 3 * 60 * 1000 // 3 minutos entre envíos
+const RATE_LIMIT_MS  = 3 * 60 * 1000
 
 function getRateLimitRemaining() {
   try {
@@ -177,16 +196,16 @@ export default function CitasPublicClient() {
   const [loadingServ,    setLoadingServ]    = useState(true)
   const [availableSlots, setAvailableSlots] = useState<string[] | null>(null)
   const [loading,        setLoading]        = useState(false)
-  const [success,        setSuccess]        = useState(false)
+  const [success,        setSuccess]        = useState<string | null>(null) // cita_id
   const [error,          setError]          = useState('')
   const [rateLimitSecs,  setRateLimitSecs]  = useState(() => getRateLimitRemaining())
   const [fieldErrors,    setFieldErrors]    = useState<Record<string,string>>({})
   const slotVersionRef  = useRef(0)
   const submitInFlight  = useRef(false)
 
-  // Cargar servicios al montar
+  // Paso 1 — Cargar servicios desde el chatbot
   useEffect(() => {
-    fetch('/api/servicios')
+    fetch(`${CHATBOT_URL}/api/servicios`)
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
       .then(data => setServicios(Array.isArray(data) ? data : []))
       .catch(err => {
@@ -196,16 +215,18 @@ export default function CitasPublicClient() {
       .finally(() => setLoadingServ(false))
   }, [])
 
-  // Cargar slots disponibles cuando cambia la fecha (versión ref evita race condition)
+  // Paso 2 — Cargar slots cuando cambia fecha o servicio (con duracion_minutos)
   useEffect(() => {
-    if (!form.fecha) return
+    if (!form.fecha || !form.duracion_minutos) return
     setAvailableSlots(null)
     setForm(f => ({ ...f, hora: '' }))
     const version = ++slotVersionRef.current
-    fetch(`/api/citas/disponibilidad?fecha=${form.fecha}`)
-      .then(r => r.json())
-      .then(data => {
-        if (version === slotVersionRef.current) setAvailableSlots(data.disponibles ?? [])
+    fetch(`${CHATBOT_URL}/api/disponibilidad?fecha=${form.fecha}&duracion_minutos=${form.duracion_minutos}`)
+      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
+      .then((data: string[]) => {
+        if (version === slotVersionRef.current) {
+          setAvailableSlots(Array.isArray(data) ? data : [])
+        }
       })
       .catch(() => {
         if (version === slotVersionRef.current) {
@@ -213,7 +234,7 @@ export default function CitasPublicClient() {
           setError('No pudimos consultar disponibilidad. Intenta de nuevo.')
         }
       })
-  }, [form.fecha])
+  }, [form.fecha, form.duracion_minutos])
 
   // Countdown del rate limit
   useEffect(() => {
@@ -229,14 +250,23 @@ export default function CitasPublicClient() {
   const update = (field: string, value: string | number) => setForm(f => ({ ...f, [field]: value }))
 
   const selectServicio = (s: Servicio) => {
-    setForm(f => ({ ...f, servicio_id: s.id, servicio: s.nombre, precio: s.precio ?? 0 }))
+    setForm(f => ({
+      ...f,
+      servicio_id:      s.id,
+      servicio_nombre:  s.nombre,
+      duracion_minutos: s.duracion_minutos,
+      precio:           s.precio,
+      // Reset fecha/hora if service changes (duration affects availability)
+      fecha: '',
+      hora:  '',
+    }))
+    setAvailableSlots(null)
   }
 
-  // Validaciones por paso
   const isNombreValid   = () => !validarNombre(form.nombre) && !!form.nombre.trim()
   const isCedulaValid   = () => !!form.cedula.trim() && !validarCedula(form.cedula)
   const isTelefonoValid = () => !!form.telefono.trim() && !validarTelefono(form.telefono)
-  const isCorreoValid   = () => !validarCorreo(form.correo) // optional
+  const isCorreoValid   = () => !validarCorreo(form.correo)
 
   const validateStep0 = () => {
     const errs: Record<string,string> = {}
@@ -264,6 +294,7 @@ export default function CitasPublicClient() {
     setStep(s => s + 1)
   }
 
+  // Paso 3 — Confirmar cita vía chatbot API
   const handleSubmit = async () => {
     if (submitInFlight.current) return
     const remaining = getRateLimitRemaining()
@@ -276,55 +307,64 @@ export default function CitasPublicClient() {
     setLoading(true)
     setError('')
     try {
-      // Buscar o crear cliente
-      const clienteRes = await fetch('/api/clientes', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre:   form.nombre.trim(),
-          cedula:   form.cedula.trim(),
-          telefono: form.telefono.trim(),
-          correo:   form.correo.trim() || null,
-        }),
-      })
-      if (!clienteRes.ok) throw new Error('No se pudo registrar el paciente. Intenta de nuevo.')
-      const cliente = await clienteRes.json()
-      if (!cliente?.id) throw new Error('No se pudo registrar el paciente. Intenta de nuevo.')
+      const hora_fin = calcularHoraFin(form.hora, form.duracion_minutos)
 
-      const citaRes = await fetch('/api/citas', {
-        method: 'POST',
+      const res = await fetch(`${CHATBOT_URL}/api/citas`, {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clienteId:  cliente.id,
-          servicioId: form.servicio_id,
-          fecha:      form.fecha,
-          hora:       form.hora,
-          precio:     form.precio,
-          notas:      form.notas.trim() || null,
+          nombre:           form.nombre.trim(),
+          telefono:         `57${form.telefono.trim()}`,
+          servicio_id:      form.servicio_id,
+          servicio_nombre:  form.servicio_nombre,
+          duracion_minutos: form.duracion_minutos,
+          precio:           form.precio,
+          fecha:            form.fecha,
+          hora_inicio:      form.hora,
+          hora_fin,
         }),
       })
-      if (!citaRes.ok) {
-        const body = await citaRes.json().catch(() => ({}))
-        throw new Error(body?.error ?? 'Error al registrar la cita')
+
+      if (res.status === 201) {
+        const data = await res.json()
+        try { localStorage.setItem(RATE_LIMIT_KEY, String(Date.now())) } catch { /* ignorar */ }
+        setRateLimitSecs(Math.ceil(RATE_LIMIT_MS / 1000))
+        setSuccess(data?.cita_id ?? 'ok')
+        return
       }
 
-      try { localStorage.setItem(RATE_LIMIT_KEY, String(Date.now())) } catch { /* ignorar */ }
-      setRateLimitSecs(Math.ceil(RATE_LIMIT_MS / 1000))
-      setSuccess(true)
-    } catch (e: unknown) {
-      const msg = (e as Error).message ?? ''
-      if (msg.includes('horario')) {
-        setError('Ese horario ya fue tomado. Por favor elige otra hora.')
+      if (res.status === 409) {
+        // Slot tomado por otra persona — recargar disponibilidad y volver al paso de hora
+        setError('Ese horario fue tomado justo ahora. Por favor elige otra hora.')
+        setAvailableSlots(null)
+        setForm(f => ({ ...f, hora: '' }))
+        setStep(3)
+        // Recargar slots
+        const version = ++slotVersionRef.current
+        fetch(`${CHATBOT_URL}/api/disponibilidad?fecha=${form.fecha}&duracion_minutos=${form.duracion_minutos}`)
+          .then(r => r.ok ? r.json() : Promise.reject())
+          .then((data: string[]) => {
+            if (version === slotVersionRef.current) setAvailableSlots(Array.isArray(data) ? data : [])
+          })
+          .catch(() => { if (version === slotVersionRef.current) setAvailableSlots([]) })
+        return
+      }
+
+      const body = await res.json().catch(() => ({}))
+      if (res.status === 400) {
+        setError(body?.error ?? 'Datos inválidos. Verifica la información.')
       } else {
-        setError('Hubo un problema al registrar tu cita. Intenta de nuevo o contáctanos por WhatsApp.')
+        setError('Error interno. Intenta de nuevo.')
       }
+    } catch {
+      setError('Sin conexión. Verifica tu internet e intenta de nuevo.')
     } finally {
       submitInFlight.current = false
       setLoading(false)
     }
   }
 
-  if (success) {
+  if (success !== null) {
     return (
       <main className="appointments">
         <div className="container appt-wrap">
@@ -336,14 +376,19 @@ export default function CitasPublicClient() {
             </div>
             <h2>¡Cita registrada!</h2>
             <p>
-              Gracias <strong>{form.nombre}</strong>, tu cita para <strong>{form.servicio}</strong> el{' '}
+              Gracias <strong>{form.nombre}</strong>, tu cita para <strong>{form.servicio_nombre}</strong> el{' '}
               <strong>{form.fecha}</strong> a las <strong>{form.hora}</strong> ha sido registrada.
             </p>
             <p className="appt-success__note">
               Te contactaremos al {form.telefono} para confirmar tu cita.
               {form.correo && ` También te enviaremos un recordatorio a ${form.correo}.`}
             </p>
-            <button className="btn btn-primary" onClick={() => { setSuccess(false); setForm(INITIAL_FORM); setStep(0) }}>
+            {success !== 'ok' && (
+              <p className="appt-success__note" style={{ fontSize: '0.75rem', opacity: 0.6 }}>
+                Referencia: {success}
+              </p>
+            )}
+            <button className="btn btn-primary" onClick={() => { setSuccess(null); setForm(INITIAL_FORM); setStep(0) }}>
               Agendar otra cita
             </button>
           </div>
@@ -446,6 +491,11 @@ export default function CitasPublicClient() {
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                       </svg>
                       {s.nombre}
+                      {s.duracion_minutos > 0 && (
+                        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', opacity: 0.6, fontWeight: 400 }}>
+                          {s.duracion_minutos} min
+                        </span>
+                      )}
                       {form.servicio_id === s.id && (
                         <svg className="service-opt__check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                           <polyline points="20 6 9 17 4 12"/>
@@ -490,9 +540,10 @@ export default function CitasPublicClient() {
                   {form.fecha ? new Date(form.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}
                 </strong>
               </p>
+              {error && <p className="appt-error" style={{ marginBottom: '1rem' }}>{error}</p>}
               <TimeSlotPicker
                 selectedTime={form.hora}
-                onSelect={h => update('hora', h)}
+                onSelect={h => { update('hora', h); setError('') }}
                 availableSlots={availableSlots}
               />
             </div>
@@ -505,14 +556,14 @@ export default function CitasPublicClient() {
               <p className="appt-step__sub">Revisa los datos antes de enviar.</p>
               <div className="summary">
                 {[
-                  { label: 'Nombre',   value: form.nombre },
-                  { label: 'Cédula',   value: form.cedula },
-                  { label: 'Teléfono', value: form.telefono },
-                  { label: 'Correo',   value: form.correo || '—' },
-                  { label: 'Servicio', value: form.servicio },
-                  { label: 'Fecha',    value: new Date(form.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
-                  { label: 'Hora',     value: form.hora },
-                  { label: 'Notas',    value: form.notas || '—' },
+                  { label: 'Nombre',    value: form.nombre },
+                  { label: 'Cédula',    value: form.cedula },
+                  { label: 'Teléfono',  value: form.telefono },
+                  { label: 'Correo',    value: form.correo || '—' },
+                  { label: 'Servicio',  value: `${form.servicio_nombre} (${form.duracion_minutos} min)` },
+                  { label: 'Fecha',     value: new Date(form.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
+                  { label: 'Hora',      value: `${form.hora} – ${calcularHoraFin(form.hora, form.duracion_minutos)}` },
+                  { label: 'Notas',     value: form.notas || '—' },
                 ].map(({ label, value }) => (
                   <div key={label} className="summary__row">
                     <span className="summary__label">{label}</span>
@@ -527,7 +578,7 @@ export default function CitasPublicClient() {
           {/* Navigation */}
           <div className="appt-nav">
             {step > 0 && (
-              <button className="btn btn-ghost appt-nav__back" onClick={() => setStep(s => s - 1)}>
+              <button className="btn btn-ghost appt-nav__back" onClick={() => { setStep(s => s - 1); setError('') }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
                 Atrás
               </button>
