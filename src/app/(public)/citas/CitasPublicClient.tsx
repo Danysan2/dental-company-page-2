@@ -296,37 +296,47 @@ export default function CitasPublicClient() {
 
   // Paso 3 — Confirmar cita vía chatbot API
   const handleSubmit = async () => {
-    if (submitInFlight.current) return
+    console.log('[handleSubmit] called, inFlight=', submitInFlight.current)
+    if (submitInFlight.current) { console.log('[handleSubmit] blocked by inFlight'); return }
+
     const remaining = getRateLimitRemaining()
+    console.log('[handleSubmit] rateLimitRemaining=', remaining)
     if (remaining > 0) {
       setError(`Por favor espera ${remaining} segundo${remaining !== 1 ? 's' : ''} antes de enviar otra solicitud.`)
       setRateLimitSecs(remaining)
       return
     }
+
     submitInFlight.current = true
     setLoading(true)
     setError('')
-    try {
-      const hora_fin = calcularHoraFin(form.hora, form.duracion_minutos)
 
+    const hora_fin = calcularHoraFin(form.hora, form.duracion_minutos)
+    const payload = {
+      nombre:           form.nombre.trim(),
+      telefono:         `57${form.telefono.trim()}`,
+      servicio_id:      form.servicio_id,
+      servicio_nombre:  form.servicio_nombre,
+      duracion_minutos: form.duracion_minutos,
+      precio:           form.precio,
+      fecha:            form.fecha,
+      hora_inicio:      form.hora,
+      hora_fin,
+    }
+    console.log('[handleSubmit] payload:', JSON.stringify(payload))
+    console.log('[handleSubmit] fetching:', `${BOT_API}/citas`)
+
+    try {
       const res = await fetch(`${BOT_API}/citas`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre:           form.nombre.trim(),
-          telefono:         `57${form.telefono.trim()}`,
-          servicio_id:      form.servicio_id,
-          servicio_nombre:  form.servicio_nombre,
-          duracion_minutos: form.duracion_minutos,
-          precio:           form.precio,
-          fecha:            form.fecha,
-          hora_inicio:      form.hora,
-          hora_fin,
-        }),
+        body:    JSON.stringify(payload),
       })
 
+      console.log('[handleSubmit] response status:', res.status)
       const data = await res.json().catch(() => ({}))
-      // FastAPI error format uses "detail", our proxy may use "error"
+      console.log('[handleSubmit] response body:', JSON.stringify(data))
+
       const errMsg = (msg: unknown) =>
         typeof msg === 'string' ? msg : JSON.stringify(msg)
       const apiError = (d: Record<string, unknown>) =>
@@ -340,7 +350,6 @@ export default function CitasPublicClient() {
       }
 
       if (res.status === 409) {
-        // Slot tomado por otra persona — recargar disponibilidad y volver al paso de hora
         setError('Ese horario fue tomado justo ahora. Por favor elige otra hora.')
         setAvailableSlots(null)
         setForm(f => ({ ...f, hora: '' }))
@@ -355,16 +364,17 @@ export default function CitasPublicClient() {
         return
       }
 
-      if (res.status === 400) {
-        setError(apiError(data))
-      } else {
-        setError(`Error del servidor (${res.status}). Intenta de nuevo.`)
-      }
-    } catch {
+      setError(res.status === 400
+        ? apiError(data)
+        : `Error del servidor (${res.status}). Intenta de nuevo.`
+      )
+    } catch (e: unknown) {
+      console.error('[handleSubmit] fetch threw:', e)
       setError('Sin conexión. Verifica tu internet e intenta de nuevo.')
     } finally {
       submitInFlight.current = false
       setLoading(false)
+      console.log('[handleSubmit] done')
     }
   }
 
