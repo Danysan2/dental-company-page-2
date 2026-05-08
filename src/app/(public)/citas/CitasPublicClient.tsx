@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { validarNombre, validarCedula, validarTelefono, validarCorreo } from '@/lib/validators'
 import './Appointments.css'
 
-const CHATBOT_URL = process.env.NEXT_PUBLIC_CHATBOT_URL ?? 'https://dentalbot.clouddec.site'
+const BOT_API = '/api/bot'
 
 const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 const MONTHS_ES = [
@@ -205,7 +205,7 @@ export default function CitasPublicClient() {
 
   // Paso 1 — Cargar servicios desde el chatbot
   useEffect(() => {
-    fetch(`${CHATBOT_URL}/api/servicios`)
+    fetch(`${BOT_API}/servicios`)
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
       .then(data => setServicios(Array.isArray(data) ? data : []))
       .catch(err => {
@@ -221,7 +221,7 @@ export default function CitasPublicClient() {
     setAvailableSlots(null)
     setForm(f => ({ ...f, hora: '' }))
     const version = ++slotVersionRef.current
-    fetch(`${CHATBOT_URL}/api/disponibilidad?fecha=${form.fecha}&duracion_minutos=${form.duracion_minutos}`)
+    fetch(`${BOT_API}/disponibilidad?fecha=${form.fecha}&duracion_minutos=${form.duracion_minutos}`)
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
       .then((data: string[]) => {
         if (version === slotVersionRef.current) {
@@ -309,7 +309,7 @@ export default function CitasPublicClient() {
     try {
       const hora_fin = calcularHoraFin(form.hora, form.duracion_minutos)
 
-      const res = await fetch(`${CHATBOT_URL}/api/citas`, {
+      const res = await fetch(`${BOT_API}/citas`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -341,7 +341,7 @@ export default function CitasPublicClient() {
         setStep(3)
         // Recargar slots
         const version = ++slotVersionRef.current
-        fetch(`${CHATBOT_URL}/api/disponibilidad?fecha=${form.fecha}&duracion_minutos=${form.duracion_minutos}`)
+        fetch(`${BOT_API}/disponibilidad?fecha=${form.fecha}&duracion_minutos=${form.duracion_minutos}`)
           .then(r => r.ok ? r.json() : Promise.reject())
           .then((data: string[]) => {
             if (version === slotVersionRef.current) setAvailableSlots(Array.isArray(data) ? data : [])
