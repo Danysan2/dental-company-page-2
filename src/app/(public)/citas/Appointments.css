@@ -465,6 +465,20 @@
   margin-top: 1rem;
 }
 
+.appt-error-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  background: #f8d7da;
+  color: #842029;
+  border: 1px solid #f5c2c7;
+  padding: 1rem 1.25rem;
+  border-radius: var(--r-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
 /* ── Navigation buttons ── */
 .appt-nav {
   display: flex;

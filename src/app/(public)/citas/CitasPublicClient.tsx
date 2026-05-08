@@ -269,6 +269,7 @@ export default function CitasPublicClient() {
       if (Object.keys(errs).length > 0) { setFieldErrors(errs); return }
       setFieldErrors({})
     }
+    setError('')
     setStep(s => s + 1)
   }
 
@@ -284,13 +285,14 @@ export default function CitasPublicClient() {
     const payload = {
       nombre:           form.nombre.trim(),
       telefono:         form.telefono.trim(),
-      servicio_id:      form.servicio_id,
+      servicio_id:      String(form.servicio_id),
       servicio_nombre:  form.servicio_nombre,
-      duracion_minutos: form.duracion_minutos,
-      precio:           form.precio,
+      duracion_minutos: Number(form.duracion_minutos),
+      precio:           Number(form.precio),
       fecha:            form.fecha,
       hora_inicio:      form.hora,
       hora_fin,
+      notas:            form.notas.trim() || '',
     }
     console.log('[handleSubmit] payload:', JSON.stringify(payload))
     console.log('[handleSubmit] fetching:', `${BOT_API}/citas`)
@@ -553,6 +555,16 @@ export default function CitasPublicClient() {
                 ))}
               </div>
               {error && <p className="appt-error">{error}</p>}
+            </div>
+          )}
+
+          {/* Error banner — visible above navigation on any step */}
+          {error && step === 4 && (
+            <div className="appt-error-banner" role="alert">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+              {error}
             </div>
           )}
 
