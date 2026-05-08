@@ -3,28 +3,8 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { formatCOP, today } from '@/lib/helpers'
+import Skeleton from '@/components/ui/Skeleton'
 import './AdminDashboard.css'
-
-/* ── Skeleton ── */
-function Skeleton({ width = '100%', height = 16, radius = 8, circle = false, style = {} }: {
-  width?: number | string; height?: number; radius?: number; circle?: boolean; style?: React.CSSProperties
-}) {
-  return (
-    <div
-      aria-hidden="true"
-      style={{
-        width: circle ? height : width,
-        height,
-        borderRadius: circle ? '50%' : radius,
-        background: 'linear-gradient(90deg, var(--c-warm-2) 25%, var(--c-warm-1) 50%, var(--c-warm-2) 75%)',
-        backgroundSize: '400% 100%',
-        animation: 'shimmer 1.4s ease infinite',
-        flexShrink: 0,
-        ...style,
-      }}
-    />
-  )
-}
 
 /* ── SVG Bar Chart ── */
 function BarChart({ data, color = '#896646' }: { data: { label: string; value: number; today: boolean }[]; color?: string }) {

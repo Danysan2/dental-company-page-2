@@ -1,34 +1,35 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getSession } from '@/lib/auth'
-import { Unauthorized, NotFound, BadRequest, ServerError } from '@/lib/apiErrors'
-import { validarNombre, validarCedula, validarTelefono, validarCorreo, sanitizarTexto } from '@/lib/validators'
+import { prisma }                    from '@/lib/prisma'
+import { requireSession }            from '@/lib/auth'
+import { NotFound, BadRequest, ServerError } from '@/lib/apiErrors'
+import { validarNombre, validarCedula, validarTelefono, validarCorreo, validarUUID, sanitizarTexto } from '@/lib/validators'
 
-// GET /api/clientes/:id/historial — returns appointment history
 export async function GET(
   _req: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getSession()
-    if (!session) return Unauthorized()
+    const auth = await requireSession()
+    if (auth instanceof NextResponse) return auth
+
+    const uuidErr = validarUUID(params.id)
+    if (uuidErr) return BadRequest(uuidErr)
 
     const cliente = await prisma.cliente.findUnique({
-      where: { id: params.id },
+      where:   { id: params.id },
       include: {
         citas: {
           include: { servicio: { select: { nombre: true } } },
           orderBy: { fecha: 'desc' },
-          take: 50,
+          take:    50,
         },
       },
     })
 
     if (!cliente) return NotFound('Cliente no encontrado')
 
-    // Return flat historial matching ClienteDrawer expectations
     const historial = cliente.citas.map(c => ({
       id:       c.id,
       servicio: c.servicio.nombre,
@@ -50,18 +51,21 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getSession()
-    if (!session) return Unauthorized()
+    const auth = await requireSession()
+    if (auth instanceof NextResponse) return auth
 
-    const body = await req.json()
+    const uuidErr = validarUUID(params.id)
+    if (uuidErr) return BadRequest(uuidErr)
+
+    const body   = await req.json()
     const nombre = sanitizarTexto(body.nombre ?? '')
 
     const errNombre = validarNombre(nombre)
     if (errNombre) return BadRequest(errNombre)
 
-    const cedula   = body.cedula   ? sanitizarTexto(body.cedula)   : null
-    const telefono = body.telefono ? sanitizarTexto(body.telefono) : null
-    const correo   = body.correo   ? sanitizarTexto(body.correo).toLowerCase() : null
+    const cedula   = body.cedula   ? sanitizarTexto(body.cedula)                  : null
+    const telefono = body.telefono ? sanitizarTexto(body.telefono)                : null
+    const correo   = body.correo   ? sanitizarTexto(body.correo).toLowerCase()    : null
 
     if (cedula   && validarCedula(cedula))     return BadRequest(validarCedula(cedula)!)
     if (telefono && validarTelefono(telefono)) return BadRequest(validarTelefono(telefono)!)
@@ -84,8 +88,12 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const session = await getSession()
-    if (!session) return Unauthorized()
+    // Only doctora can deactivate clients
+    const auth = await requireSession('doctora')
+    if (auth instanceof NextResponse) return auth
+
+    const uuidErr = validarUUID(params.id)
+    if (uuidErr) return BadRequest(uuidErr)
 
     await prisma.cliente.update({
       where: { id: params.id },

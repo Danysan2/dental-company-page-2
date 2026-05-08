@@ -1,15 +1,19 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getSession } from '@/lib/auth'
+import { prisma }            from '@/lib/prisma'
+import { getSession, requireSession } from '@/lib/auth'
 import { Unauthorized, BadRequest, ServerError } from '@/lib/apiErrors'
-import { validarFecha, validarHora } from '@/lib/validators'
+import { validarFecha, validarHora, sanitizarTexto } from '@/lib/validators'
+
+const VALID_ESTADOS = ['programada', 'completada', 'cancelada', 'no_asistio'] as const
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSession()
-    if (!session) return Unauthorized()
+    const auth = await requireSession()
+    if (auth instanceof NextResponse) return auth
+    const { session } = auth
+    void session // session available if needed for future role checks
 
     const { searchParams } = new URL(req.url)
     const desde     = searchParams.get('desde')
@@ -75,7 +79,15 @@ export async function POST(req: NextRequest) {
     const errHora = validarHora(hora)
     if (errHora)     return BadRequest(errHora)
 
-    // Verificar disponibilidad
+    // Validate optional fields
+    const estadoFinal = estado ?? 'programada'
+    if (!VALID_ESTADOS.includes(estadoFinal)) return BadRequest('Estado inválido')
+    if (precio !== undefined && precio !== null && (typeof precio !== 'number' || precio < 0)) {
+      return BadRequest('Precio inválido')
+    }
+    const notasSanitizadas = notas ? sanitizarTexto(notas).slice(0, 500) : null
+
+    // Check availability
     const conflict = await prisma.cita.findFirst({
       where: { fecha: new Date(fecha), hora, estado: { not: 'cancelada' } },
     })
@@ -87,9 +99,9 @@ export async function POST(req: NextRequest) {
         servicioId,
         fecha:  new Date(fecha),
         hora,
-        notas:  notas  ?? null,
+        notas:  notasSanitizadas,
         precio: precio ?? null,
-        estado: estado ?? 'programada',
+        estado: estadoFinal,
       },
       include: {
         cliente:  { select: { id: true, nombre: true, telefono: true, correo: true, cedula: true } },

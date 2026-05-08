@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server'
 
 // ── Mocks ────────────────────────────────────────────────────
 vi.mock('@/lib/auth', () => ({
-  getSession: vi.fn(),
+  requireSession: vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({
@@ -20,7 +20,7 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
-import { getSession }  from '@/lib/auth'
+import { requireSession } from '@/lib/auth'
 import { prisma }      from '@/lib/prisma'
 import { GET, POST }   from '@/app/api/clientes/route'
 
@@ -55,13 +55,14 @@ const mockClienteDB = {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(getSession).mockResolvedValue({ userId: 'u1', rol: 'doctora' } as ReturnType<typeof getSession> extends Promise<infer T> ? T : never)
+  vi.mocked(requireSession).mockResolvedValue({ session: { id: 'u1', email: 'doc@test.com', nombre: 'Doc', rol: 'doctora' } })
 })
 
 // ── GET /api/clientes ────────────────────────────────────────
 describe('GET /api/clientes', () => {
   it('retorna 401 si no hay sesión', async () => {
-    vi.mocked(getSession).mockResolvedValue(null)
+    const { NextResponse } = await import('next/server')
+    vi.mocked(requireSession).mockResolvedValue(NextResponse.json({ error: 'No autorizado' }, { status: 401 }))
     const res = await GET(makeReq())
     expect(res.status).toBe(401)
   })

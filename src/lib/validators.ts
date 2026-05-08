@@ -41,3 +41,17 @@ export function validarHora(hora: string): string | null {
 export function sanitizarTexto(texto: string): string {
   return texto?.trim().replace(/\s+/g, ' ') ?? ''
 }
+
+export function sanitizarCampos<T extends Record<string, unknown>>(obj: T): T {
+  return Object.fromEntries(
+    Object.entries(obj).map(([k, v]) => [k, typeof v === 'string' ? sanitizarTexto(v) : v])
+  ) as T
+}
+
+export function validarUUID(id: string): string | null {
+  if (!id?.trim()) return 'El ID es requerido'
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id.trim())) {
+    return 'ID inválido'
+  }
+  return null
+}

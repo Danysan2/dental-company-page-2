@@ -2,14 +2,14 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getSession } from '@/lib/auth'
+import { getSession, requireSession } from '@/lib/auth'
 import { Unauthorized, BadRequest, ServerError } from '@/lib/apiErrors'
 import { validarNombre, validarCedula, validarTelefono, validarCorreo, sanitizarTexto } from '@/lib/validators'
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getSession()
-    if (!session) return Unauthorized()
+    const auth = await requireSession()
+    if (auth instanceof NextResponse) return auth
 
     const { searchParams } = new URL(req.url)
     const q = searchParams.get('q')?.trim()

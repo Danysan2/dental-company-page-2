@@ -1,0 +1,133 @@
+/* ── Toast Stack ── */
+.toast-stack {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  pointer-events: none;
+  width: 320px;
+  max-width: calc(100vw - 2rem);
+}
+
+/* ── Single Toast ── */
+.toast {
+  pointer-events: all;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem 2.25rem 0.85rem 1rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.14);
+  overflow: hidden;
+  cursor: default;
+
+  opacity: 0;
+  transform: translateX(110%);
+  transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.toast--visible {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── Type variants ── */
+.toast--success {
+  background: #f0faf4;
+  border: 1px solid #a7d9b7;
+  color: #1a5c35;
+}
+.toast--success .toast__icon    { color: #2a9d5c; }
+.toast--success .toast__progress { background: #2a9d5c; }
+
+.toast--error {
+  background: #fff5f5;
+  border: 1px solid #f5b8b8;
+  color: #7a1b1b;
+}
+.toast--error .toast__icon    { color: #dc3545; }
+.toast--error .toast__progress { background: #dc3545; }
+
+.toast--warning {
+  background: #fffbeb;
+  border: 1px solid #f9d77c;
+  color: #744210;
+}
+.toast--warning .toast__icon    { color: #d97706; }
+.toast--warning .toast__progress { background: #d97706; }
+
+.toast--info {
+  background: var(--color-warm-3, #F1ECE6);
+  border: 1px solid var(--color-mist, #C2D1D3);
+  color: var(--color-dark, #3D3C3B);
+}
+.toast--info .toast__icon    { color: var(--color-accent, #896646); }
+.toast--info .toast__progress { background: var(--color-accent, #896646); }
+
+/* ── Icon ── */
+.toast__icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+}
+.toast__icon svg { width: 100%; height: 100%; }
+
+/* ── Message ── */
+.toast__msg {
+  font-size: 0.855rem;
+  line-height: 1.5;
+  font-weight: 500;
+  flex: 1;
+}
+
+/* ── Close button ── */
+.toast__close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.toast__close:hover { opacity: 1; }
+.toast__close svg   { width: 12px; height: 12px; }
+
+/* ── Progress bar ── */
+.toast__progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  transform-origin: left;
+  animation: toast-progress linear forwards;
+}
+
+@keyframes toast-progress {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+/* ── Mobile ── */
+@media (max-width: 480px) {
+  .toast-stack {
+    right: 0.75rem;
+    left: 0.75rem;
+    width: auto;
+    bottom: 1rem;
+  }
+}

@@ -1,15 +1,15 @@
 export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
-import { getSession } from '@/lib/auth'
-import { Unauthorized, ServerError } from '@/lib/apiErrors'
+import { prisma }         from '@/lib/prisma'
+import { requireSession } from '@/lib/auth'
+import { ServerError }    from '@/lib/apiErrors'
 import { today, startOfMonth, daysAgo } from '@/lib/helpers'
 
 export async function GET() {
   try {
-    const session = await getSession()
-    if (!session) return Unauthorized()
+    const auth = await requireSession()
+    if (auth instanceof NextResponse) return auth
 
     const todayStr    = today()
     const monthStart  = startOfMonth()
