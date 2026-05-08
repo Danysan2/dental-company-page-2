@@ -325,8 +325,14 @@ export default function CitasPublicClient() {
         }),
       })
 
+      const data = await res.json().catch(() => ({}))
+      // FastAPI error format uses "detail", our proxy may use "error"
+      const errMsg = (msg: unknown) =>
+        typeof msg === 'string' ? msg : JSON.stringify(msg)
+      const apiError = (d: Record<string, unknown>) =>
+        errMsg(d?.detail ?? d?.error ?? 'Error desconocido')
+
       if (res.status === 201) {
-        const data = await res.json()
         try { localStorage.setItem(RATE_LIMIT_KEY, String(Date.now())) } catch { /* ignorar */ }
         setRateLimitSecs(Math.ceil(RATE_LIMIT_MS / 1000))
         setSuccess(data?.cita_id ?? 'ok')
@@ -339,22 +345,20 @@ export default function CitasPublicClient() {
         setAvailableSlots(null)
         setForm(f => ({ ...f, hora: '' }))
         setStep(3)
-        // Recargar slots
         const version = ++slotVersionRef.current
         fetch(`${BOT_API}/disponibilidad?fecha=${form.fecha}&duracion_minutos=${form.duracion_minutos}`)
           .then(r => r.ok ? r.json() : Promise.reject())
-          .then((data: string[]) => {
-            if (version === slotVersionRef.current) setAvailableSlots(Array.isArray(data) ? data : [])
+          .then((slots: string[]) => {
+            if (version === slotVersionRef.current) setAvailableSlots(Array.isArray(slots) ? slots : [])
           })
           .catch(() => { if (version === slotVersionRef.current) setAvailableSlots([]) })
         return
       }
 
-      const body = await res.json().catch(() => ({}))
       if (res.status === 400) {
-        setError(body?.error ?? 'Datos inválidos. Verifica la información.')
+        setError(apiError(data))
       } else {
-        setError('Error interno. Intenta de nuevo.')
+        setError(`Error del servidor (${res.status}). Intenta de nuevo.`)
       }
     } catch {
       setError('Sin conexión. Verifica tu internet e intenta de nuevo.')
