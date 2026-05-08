@@ -1,13 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter }           from 'next/navigation'
-import Link                    from 'next/link'
-import { useAuth }             from '@/context/AuthContext'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link          from 'next/link'
 import './Login.css'
 
 export default function LoginClient() {
-  const { login, user, loading } = useAuth()
   const router = useRouter()
 
   const [email,      setEmail]      = useState('')
@@ -16,44 +14,37 @@ export default function LoginClient() {
   const [submitting, setSubmitting] = useState(false)
   const [error,      setError]      = useState('')
 
-  useEffect(() => {
-    if (!loading && user) router.replace('/admin/dashboard')
-  }, [user, loading, router])
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setSubmitting(true)
     try {
-      await login(email.trim(), password)
-      router.replace('/admin/dashboard')
-    } catch (err: unknown) {
-      const msg = (err as Error).message ?? ''
-      const messages: Record<string, string> = {
-        'Credenciales incorrectas': 'Correo o contraseña incorrectos.',
-        'invalid_credentials':      'Correo o contraseña incorrectos.',
-        'user_not_found':           'No existe una cuenta con este correo.',
-        'too_many_requests':        'Demasiados intentos. Espera unos minutos.',
-        'network_error':            'Sin conexión. Verifica tu internet.',
+      const res = await fetch('/api/auth/login', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ email: email.trim(), password }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        const msg: string = data?.error ?? ''
+        const messages: Record<string, string> = {
+          'Credenciales incorrectas': 'Correo o contraseña incorrectos.',
+          'invalid_credentials':      'Correo o contraseña incorrectos.',
+          'user_not_found':           'No existe una cuenta con este correo.',
+        }
+        if (res.status === 429) {
+          setError(msg || 'Demasiados intentos. Espera unos minutos.')
+        } else {
+          setError(messages[msg] ?? `Error al iniciar sesión. Verifica tus datos.`)
+        }
+        return
       }
-      setError(messages[msg] ?? `Error al iniciar sesión. Verifica tus datos. (${msg || 'desconocido'})`)
+      router.replace('/admin/dashboard')
+    } catch {
+      setError('Sin conexión. Verifica tu internet.')
     } finally {
       setSubmitting(false)
     }
-  }
-
-  if (loading) {
-    return (
-      <div className="login-page">
-        <div className="login-page__bg" aria-hidden="true">
-          <div className="login-bg-blob login-bg-blob--1" />
-          <div className="login-bg-blob login-bg-blob--2" />
-        </div>
-        <div className="login-card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 200 }}>
-          <span className="btn-spinner" style={{ width: 32, height: 32, borderWidth: 3 }} />
-        </div>
-      </div>
-    )
   }
 
   return (
