@@ -8,17 +8,18 @@ import { validarNombre, validarCedula, validarTelefono, validarCorreo, validarUU
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireSession()
     if (auth instanceof NextResponse) return auth
 
-    const uuidErr = validarUUID(params.id)
+    const { id } = await params
+    const uuidErr = validarUUID(id)
     if (uuidErr) return BadRequest(uuidErr)
 
     const cliente = await prisma.cliente.findUnique({
-      where:   { id: params.id },
+      where:   { id },
       include: {
         citas: {
           include: { servicio: { select: { nombre: true } } },
@@ -48,13 +49,14 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireSession()
     if (auth instanceof NextResponse) return auth
 
-    const uuidErr = validarUUID(params.id)
+    const { id } = await params
+    const uuidErr = validarUUID(id)
     if (uuidErr) return BadRequest(uuidErr)
 
     const body   = await req.json()
@@ -72,7 +74,7 @@ export async function PUT(
     if (correo   && validarCorreo(correo))     return BadRequest(validarCorreo(correo)!)
 
     const cliente = await prisma.cliente.update({
-      where: { id: params.id },
+      where: { id },
       data:  { nombre, cedula, telefono, correo, notas: body.notas ?? null },
     })
 
@@ -85,18 +87,19 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Only doctora can deactivate clients
     const auth = await requireSession('doctora')
     if (auth instanceof NextResponse) return auth
 
-    const uuidErr = validarUUID(params.id)
+    const { id } = await params
+    const uuidErr = validarUUID(id)
     if (uuidErr) return BadRequest(uuidErr)
 
     await prisma.cliente.update({
-      where: { id: params.id },
+      where: { id },
       data:  { activo: false },
     })
 

@@ -10,17 +10,18 @@ const VALID_ESTADOS = ['programada', 'completada', 'cancelada', 'no_asistio'] as
 
 export async function GET(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireSession()
     if (auth instanceof NextResponse) return auth
 
-    const uuidErr = validarUUID(params.id)
+    const { id } = await params
+    const uuidErr = validarUUID(id)
     if (uuidErr) return BadRequest(uuidErr)
 
     const cita = await prisma.cita.findUnique({
-      where:   { id: params.id },
+      where:   { id },
       include: {
         cliente:  { select: { id: true, nombre: true, telefono: true, correo: true, cedula: true } },
         servicio: { select: { id: true, nombre: true, precio: true } },
@@ -37,13 +38,14 @@ export async function GET(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireSession()
     if (auth instanceof NextResponse) return auth
 
-    const uuidErr = validarUUID(params.id)
+    const { id } = await params
+    const uuidErr = validarUUID(id)
     if (uuidErr) return BadRequest(uuidErr)
 
     const body = await req.json()
@@ -66,20 +68,20 @@ export async function PUT(
 
     // Check availability if date/time changes
     if (fecha || hora) {
-      const current = await prisma.cita.findUnique({ where: { id: params.id } })
+      const current = await prisma.cita.findUnique({ where: { id } })
       if (!current) return NotFound('Cita no encontrada')
 
       const newFecha = fecha ? new Date(fecha) : current.fecha
       const newHora  = hora  ?? current.hora
 
       const conflict = await prisma.cita.findFirst({
-        where: { fecha: newFecha, hora: newHora, estado: { not: 'cancelada' }, id: { not: params.id } },
+        where: { fecha: newFecha, hora: newHora, estado: { not: 'cancelada' }, id: { not: id } },
       })
       if (conflict) return BadRequest('Ese horario ya está ocupado')
     }
 
     const cita = await prisma.cita.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         ...(fecha      ? { fecha: new Date(fecha) }         : {}),
         ...(hora       ? { hora }                            : {}),
@@ -104,17 +106,18 @@ export async function PUT(
 
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await requireSession()
     if (auth instanceof NextResponse) return auth
 
-    const uuidErr = validarUUID(params.id)
+    const { id } = await params
+    const uuidErr = validarUUID(id)
     if (uuidErr) return BadRequest(uuidErr)
 
     await prisma.cita.update({
-      where: { id: params.id },
+      where: { id },
       data:  { estado: 'cancelada' },
     })
 
