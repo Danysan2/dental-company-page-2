@@ -138,7 +138,7 @@ export async function agregarCitaSheets(cita: CitaGoogleData): Promise<number | 
     const match = updatedRange.match(/!A(\d+)/)
     return match ? parseInt(match[1], 10) : null
   } catch (err) {
-    console.error('[Google Sheets] Error al agregar cita:', err)
+    console.error('[Google Sheets] Error al agregar cita (cita.id:', cita.id + '):', err)
     return null
   }
 }
@@ -164,7 +164,7 @@ export async function actualizarCalendarEventId(
       requestBody: { values: [[calendarEventId]] },
     })
   } catch (err) {
-    console.error('[Google Sheets] Error al actualizar calendar_event_id:', err)
+    console.error('[Google Sheets] Error al actualizar calendar_event_id (fila:', filaSheets, 'eventId:', calendarEventId + '):', err)
   }
 }
 
@@ -224,7 +224,7 @@ export async function crearEventoCalendar(cita: CitaGoogleData): Promise<string 
 
     return event.data.id ?? null
   } catch (err) {
-    console.error('[Google Calendar] Error al crear evento:', err)
+    console.error('[Google Calendar] Error al crear evento (cita.id:', cita.id + '):', err)
     return null
   }
 }
@@ -242,10 +242,12 @@ export async function eliminarEventoCalendar(calendarEventId: string): Promise<v
 
     await calendar.events.delete({ calendarId, eventId: calendarEventId })
   } catch (err: unknown) {
-    // 410 Gone = ya fue eliminado previamente, no es error crítico
-    const status = (err as { code?: number })?.code
+    // 410 Gone = ya fue eliminado previamente — googleapis expone el status en .response?.status (GaxiosError)
+    const status =
+      (err as { response?: { status?: number } })?.response?.status ??
+      (err as { status?: number })?.status
     if (status !== 410) {
-      console.error('[Google Calendar] Error al eliminar evento:', err)
+      console.error('[Google Calendar] Error al eliminar evento (eventId:', calendarEventId + '):', err)
     }
   }
 }
@@ -286,7 +288,7 @@ export async function buscarFilaCitaSheets(citaId: string): Promise<FilaCitaShee
     }
     return null
   } catch (err) {
-    console.error('[Google Sheets] Error al buscar cita:', err)
+    console.error('[Google Sheets] Error al buscar cita (citaId:', citaId + '):', err)
     return null
   }
 }
@@ -342,6 +344,6 @@ export async function actualizarCitaSheets(
       },
     })
   } catch (err) {
-    console.error('[Google Sheets] Error al actualizar cita:', err)
+    console.error('[Google Sheets] Error al actualizar cita (fila:', fila + '):', err)
   }
 }

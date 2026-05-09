@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { getSessionFromRequest } from './lib/auth'
+import type { SessionPayload } from './lib/auth'
 
 const PUBLIC_PATHS = ['/', '/nosotros', '/servicios', '/citas', '/contacto', '/login']
 const API_PUBLIC   = [
@@ -38,7 +39,12 @@ export async function middleware(req: NextRequest) {
 
   // Protected: /admin/* and /api/* (except public)
   if (pathname.startsWith('/admin') || pathname.startsWith('/api')) {
-    const session = await getSessionFromRequest(req)
+    let session: SessionPayload | null = null
+    try {
+      session = await getSessionFromRequest(req)
+    } catch (err) {
+      console.error('[middleware] getSessionFromRequest threw:', err)
+    }
     if (!session) {
       if (pathname.startsWith('/api')) {
         return NextResponse.json({ error: 'No autorizado' }, { status: 401 })

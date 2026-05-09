@@ -192,7 +192,10 @@ export default function CitasPublicClient() {
     setForm(f => ({ ...f, hora: '' }))
     const version = ++slotVersionRef.current
     fetch(`/api/citas/disponibilidad?fecha=${form.fecha}`)
-      .then(r => r.json())
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`)
+        return r.json()
+      })
       .then(data => {
         if (version === slotVersionRef.current) setAvailableSlots(data.disponibles ?? [])
       })

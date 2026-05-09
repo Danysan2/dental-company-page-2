@@ -150,9 +150,11 @@ export async function PUT(
           })
 
           const nuevoEventId = await crearEventoCalendar(nuevaData)
-          await actualizarCitaSheets(filaInfo.fila, {
-            calendarEventId: nuevoEventId ?? '',
-          })
+          if (nuevoEventId) {
+            await actualizarCitaSheets(filaInfo.fila, { calendarEventId: nuevoEventId })
+          } else {
+            console.error('[PUT /api/citas/:id] crearEventoCalendar falló para cita.id:', id)
+          }
         } else if (estado) {
           // Solo cambio de estado (ej: completada, no_asistio)
           await actualizarCitaSheets(filaInfo.fila, { estado })

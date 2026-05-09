@@ -28,7 +28,9 @@ export async function verifyToken(token: string): Promise<SessionPayload | null>
   try {
     const { payload } = await jwtVerify(token, SECRET)
     return payload as unknown as SessionPayload
-  } catch {
+  } catch (err) {
+    const preview = typeof token === 'string' ? token.slice(0, 20) : '?'
+    console.error('[auth] verifyToken failed (token prefix:', preview + '…):', err)
     return null
   }
 }
