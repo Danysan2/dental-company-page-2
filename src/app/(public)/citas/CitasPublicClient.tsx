@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
+import { HORARIOS } from '@/lib/helpers'
 import { validarNombre, validarCedula, validarTelefono, validarCorreo } from '@/lib/validators'
 import './Appointments.css'
-
-const BOT_API = '/api/bot'
 
 const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 const MONTHS_ES = [
@@ -15,14 +14,6 @@ const MONTHS_ES = [
 
 function toYMD(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
-}
-
-function calcularHoraFin(horaInicio: string, duracionMinutos: number): string {
-  const [h, m] = horaInicio.split(':').map(Number)
-  const totalMin = h * 60 + m + duracionMinutos
-  const hf = String(Math.floor(totalMin / 60)).padStart(2, '0')
-  const mf = String(totalMin % 60).padStart(2, '0')
-  return `${hf}:${mf}`
 }
 
 // ── Mini Calendar ──────────────────────────────────────────
@@ -52,11 +43,11 @@ function CalendarPicker({ selectedDate, onSelect }: { selectedDate: string; onSe
   return (
     <div className="cal">
       <div className="cal__header">
-        <button className="cal__nav" onClick={prevMonth} aria-label="Mes anterior">
+        <button type="button" className="cal__nav" onClick={prevMonth} aria-label="Mes anterior">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
         <span className="cal__title">{MONTHS_ES[viewMonth]} {viewYear}</span>
-        <button className="cal__nav" onClick={nextMonth} aria-label="Mes siguiente">
+        <button type="button" className="cal__nav" onClick={nextMonth} aria-label="Mes siguiente">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
@@ -76,6 +67,7 @@ function CalendarPicker({ selectedDate, onSelect }: { selectedDate: string; onSe
 
           return (
             <button
+              type="button"
               key={day}
               className={`cal__day${disabled ? ' cal__day--disabled' : ''}${isSelected ? ' cal__day--selected' : ''}`}
               disabled={disabled}
@@ -111,28 +103,24 @@ function TimeSlotPicker({ selectedTime, onSelect, availableSlots }: {
     )
   }
 
-  if (availableSlots.length === 0) {
-    return (
-      <div className="slots slots--empty">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <p>Sin disponibilidad para esta fecha.<br/>Por favor elige otro día.</p>
-      </div>
-    )
-  }
-
   return (
     <div className="slots">
-      {availableSlots.map(hora => (
-        <button
-          key={hora}
-          className={`slot${selectedTime === hora ? ' slot--selected' : ''}`}
-          onClick={() => onSelect(hora)}
-        >
-          {hora}
-        </button>
-      ))}
+      {HORARIOS.map(hora => {
+        const available  = availableSlots.includes(hora)
+        const isSelected = selectedTime === hora
+        return (
+          <button
+            type="button"
+            key={hora}
+            className={`slot${!available ? ' slot--taken' : ''}${isSelected ? ' slot--selected' : ''}`}
+            disabled={!available}
+            onClick={() => available && onSelect(hora)}
+          >
+            {hora}
+            {!available && <span className="slot__taken-label">Ocupado</span>}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -163,21 +151,14 @@ function StepBar({ step }: { step: number }) {
   )
 }
 
-// ── Types ───────────────────────────────────────────────────
-interface Servicio {
-  id: string
-  nombre: string
-  duracion_minutos: number
-  precio: number
-}
-
 // ── Main Component ──────────────────────────────────────────
+interface Servicio { id: string; nombre: string; precio?: number | null }
+
 const INITIAL_FORM = {
   nombre: '', cedula: '', telefono: '', correo: '',
-  servicio_id: '', servicio_nombre: '', duracion_minutos: 0, precio: 0,
+  servicio_id: '', servicio: '', precio: 0,
   fecha: '', hora: '', notas: '',
 }
-
 
 export default function CitasPublicClient() {
   const [step,           setStep]           = useState(0)
@@ -185,16 +166,16 @@ export default function CitasPublicClient() {
   const [servicios,      setServicios]      = useState<Servicio[]>([])
   const [loadingServ,    setLoadingServ]    = useState(true)
   const [availableSlots, setAvailableSlots] = useState<string[] | null>(null)
-  const [loading,     setLoading]     = useState(false)
-  const [success,     setSuccess]     = useState<string | null>(null) // cita_id
-  const [error,       setError]       = useState('')
-  const [fieldErrors, setFieldErrors] = useState<Record<string,string>>({})
+  const [loading,        setLoading]        = useState(false)
+  const [success,        setSuccess]        = useState(false)
+  const [error,          setError]          = useState('')
+  const [fieldErrors,    setFieldErrors]    = useState<Record<string,string>>({})
   const slotVersionRef  = useRef(0)
   const submitInFlight  = useRef(false)
 
-  // Paso 1 — Cargar servicios desde el chatbot
+  // Cargar servicios al montar
   useEffect(() => {
-    fetch(`${BOT_API}/servicios`)
+    fetch('/api/servicios')
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
       .then(data => setServicios(Array.isArray(data) ? data : []))
       .catch(err => {
@@ -204,18 +185,16 @@ export default function CitasPublicClient() {
       .finally(() => setLoadingServ(false))
   }, [])
 
-  // Paso 2 — Cargar slots cuando cambia fecha o servicio (con duracion_minutos)
+  // Cargar slots disponibles cuando cambia la fecha
   useEffect(() => {
-    if (!form.fecha || !form.duracion_minutos) return
+    if (!form.fecha) return
     setAvailableSlots(null)
     setForm(f => ({ ...f, hora: '' }))
     const version = ++slotVersionRef.current
-    fetch(`${BOT_API}/disponibilidad?fecha=${form.fecha}&duracion_minutos=${form.duracion_minutos}`)
-      .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then((data: string[]) => {
-        if (version === slotVersionRef.current) {
-          setAvailableSlots(Array.isArray(data) ? data : [])
-        }
+    fetch(`/api/citas/disponibilidad?fecha=${form.fecha}`)
+      .then(r => r.json())
+      .then(data => {
+        if (version === slotVersionRef.current) setAvailableSlots(data.disponibles ?? [])
       })
       .catch(() => {
         if (version === slotVersionRef.current) {
@@ -223,22 +202,12 @@ export default function CitasPublicClient() {
           setError('No pudimos consultar disponibilidad. Intenta de nuevo.')
         }
       })
-  }, [form.fecha, form.duracion_minutos])
+  }, [form.fecha])
 
   const update = (field: string, value: string | number) => setForm(f => ({ ...f, [field]: value }))
 
   const selectServicio = (s: Servicio) => {
-    setForm(f => ({
-      ...f,
-      servicio_id:      s.id,
-      servicio_nombre:  s.nombre,
-      duracion_minutos: s.duracion_minutos,
-      precio:           s.precio,
-      // Reset fecha/hora if service changes (duration affects availability)
-      fecha: '',
-      hora:  '',
-    }))
-    setAvailableSlots(null)
+    setForm(f => ({ ...f, servicio_id: s.id, servicio: s.nombre, precio: s.precio ?? 0 }))
   }
 
   const isNombreValid   = () => !validarNombre(form.nombre) && !!form.nombre.trim()
@@ -273,81 +242,58 @@ export default function CitasPublicClient() {
     setStep(s => s + 1)
   }
 
-  // Paso 3 — Confirmar cita vía chatbot API
   const handleSubmit = async () => {
-    console.log('[handleSubmit] called, inFlight=', submitInFlight.current)
-    if (submitInFlight.current) { console.log('[handleSubmit] blocked by inFlight'); return }
+    if (submitInFlight.current) return
     submitInFlight.current = true
     setLoading(true)
     setError('')
-
-    const hora_fin = calcularHoraFin(form.hora, form.duracion_minutos)
-    const payload = {
-      nombre:           form.nombre.trim(),
-      telefono:         form.telefono.trim(),
-      servicio_id:      String(form.servicio_id),
-      servicio_nombre:  form.servicio_nombre,
-      duracion_minutos: Number(form.duracion_minutos),
-      precio:           Number(form.precio),
-      fecha:            form.fecha,
-      hora_inicio:      form.hora,
-      hora_fin,
-      notas:            form.notas.trim() || '',
-    }
-    console.log('[handleSubmit] payload:', JSON.stringify(payload))
-    console.log('[handleSubmit] fetching:', `${BOT_API}/citas`)
-
     try {
-      const res = await fetch(`${BOT_API}/citas`, {
-        method:  'POST',
+      const clienteRes = await fetch('/api/clientes', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(payload),
+        body: JSON.stringify({
+          nombre:   form.nombre.trim(),
+          cedula:   form.cedula.trim(),
+          telefono: form.telefono.trim(),
+          correo:   form.correo.trim() || null,
+        }),
       })
+      if (!clienteRes.ok) throw new Error('No se pudo registrar el paciente. Intenta de nuevo.')
+      const cliente = await clienteRes.json()
+      if (!cliente?.id) throw new Error('No se pudo registrar el paciente. Intenta de nuevo.')
 
-      console.log('[handleSubmit] response status:', res.status)
-      const data = await res.json().catch(() => ({}))
-      console.log('[handleSubmit] response body:', JSON.stringify(data))
-
-      const errMsg = (msg: unknown) =>
-        typeof msg === 'string' ? msg : JSON.stringify(msg)
-      const apiError = (d: Record<string, unknown>) =>
-        errMsg(d?.detail ?? d?.error ?? 'Error desconocido')
-
-      if (res.status === 201) {
-        setSuccess(data?.cita_id ?? 'ok')
-        return
+      const citaRes = await fetch('/api/citas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          clienteId:  cliente.id,
+          servicioId: form.servicio_id,
+          fecha:      form.fecha,
+          hora:       form.hora,
+          precio:     form.precio,
+          notas:      form.notas.trim() || null,
+        }),
+      })
+      if (!citaRes.ok) {
+        const body = await citaRes.json().catch(() => ({}))
+        throw new Error(body?.error ?? 'Error al registrar la cita')
       }
 
-      if (res.status === 409) {
-        setError('Ese horario fue tomado justo ahora. Por favor elige otra hora.')
-        setAvailableSlots(null)
-        setForm(f => ({ ...f, hora: '' }))
-        setStep(3)
-        const version = ++slotVersionRef.current
-        fetch(`${BOT_API}/disponibilidad?fecha=${form.fecha}&duracion_minutos=${form.duracion_minutos}`)
-          .then(r => r.ok ? r.json() : Promise.reject())
-          .then((slots: string[]) => {
-            if (version === slotVersionRef.current) setAvailableSlots(Array.isArray(slots) ? slots : [])
-          })
-          .catch(() => { if (version === slotVersionRef.current) setAvailableSlots([]) })
-        return
-      }
-
-      setError(res.status === 400
-        ? apiError(data)
-        : `Error del servidor (${res.status}). Intenta de nuevo.`
-      )
+      setSuccess(true)
     } catch (e: unknown) {
-      console.error('[handleSubmit] fetch threw:', e)
-      setError('Sin conexión. Verifica tu internet e intenta de nuevo.')
+      const msg = (e as Error).message ?? ''
+      if (msg.includes('horario') || msg.includes('ocupado')) {
+        setError('Ese horario ya fue tomado. Por favor elige otra hora.')
+      } else {
+        setError(msg || 'Hubo un problema al registrar tu cita. Intenta de nuevo.')
+      }
     } finally {
       submitInFlight.current = false
       setLoading(false)
-      console.log('[handleSubmit] done')
     }
   }
 
-  if (success !== null) {
+  if (success) {
     return (
       <main className="appointments">
         <div className="container appt-wrap">
@@ -359,19 +305,14 @@ export default function CitasPublicClient() {
             </div>
             <h2>¡Cita registrada!</h2>
             <p>
-              Gracias <strong>{form.nombre}</strong>, tu cita para <strong>{form.servicio_nombre}</strong> el{' '}
+              Gracias <strong>{form.nombre}</strong>, tu cita para <strong>{form.servicio}</strong> el{' '}
               <strong>{form.fecha}</strong> a las <strong>{form.hora}</strong> ha sido registrada.
             </p>
             <p className="appt-success__note">
               Te contactaremos al {form.telefono} para confirmar tu cita.
               {form.correo && ` También te enviaremos un recordatorio a ${form.correo}.`}
             </p>
-            {success !== 'ok' && (
-              <p className="appt-success__note" style={{ fontSize: '0.75rem', opacity: 0.6 }}>
-                Referencia: {success}
-              </p>
-            )}
-            <button className="btn btn-primary" onClick={() => { setSuccess(null); setForm(INITIAL_FORM); setStep(0) }}>
+            <button type="button" className="btn btn-primary" onClick={() => { setSuccess(false); setForm(INITIAL_FORM); setStep(0) }}>
               Agendar otra cita
             </button>
           </div>
@@ -403,48 +344,26 @@ export default function CitasPublicClient() {
               <div className="appt-fields">
                 <div className="form-group">
                   <label>Nombre completo *</label>
-                  <input
-                    type="text"
-                    placeholder="Tu nombre completo"
-                    value={form.nombre}
-                    maxLength={100}
-                    onChange={e => update('nombre', e.target.value)}
-                  />
+                  <input type="text" placeholder="Tu nombre completo" value={form.nombre} maxLength={100}
+                    onChange={e => update('nombre', e.target.value)} />
                   {fieldErrors.nombre && <span className="field-error">{fieldErrors.nombre}</span>}
                 </div>
                 <div className="form-group">
                   <label>Número de cédula *</label>
-                  <input
-                    type="text"
-                    placeholder="Ej: 1234567890"
-                    value={form.cedula}
-                    maxLength={12}
-                    inputMode="numeric"
-                    onChange={e => update('cedula', e.target.value.replace(/\D/g, ''))}
-                  />
+                  <input type="text" placeholder="Ej: 1234567890" value={form.cedula} maxLength={12} inputMode="numeric"
+                    onChange={e => update('cedula', e.target.value.replace(/\D/g, ''))} />
                   {fieldErrors.cedula && <span className="field-error">{fieldErrors.cedula}</span>}
                 </div>
                 <div className="form-group">
                   <label>Teléfono / WhatsApp *</label>
-                  <input
-                    type="tel"
-                    placeholder="Ej: 3001234567"
-                    value={form.telefono}
-                    maxLength={10}
-                    inputMode="numeric"
-                    onChange={e => update('telefono', e.target.value.replace(/\D/g, ''))}
-                  />
+                  <input type="tel" placeholder="Ej: 3001234567" value={form.telefono} maxLength={10} inputMode="numeric"
+                    onChange={e => update('telefono', e.target.value.replace(/\D/g, ''))} />
                   {fieldErrors.telefono && <span className="field-error">{fieldErrors.telefono}</span>}
                 </div>
                 <div className="form-group">
                   <label>Correo electrónico <span>(opcional)</span></label>
-                  <input
-                    type="email"
-                    placeholder="tu@correo.com"
-                    value={form.correo}
-                    maxLength={150}
-                    onChange={e => update('correo', e.target.value)}
-                  />
+                  <input type="email" placeholder="tu@correo.com" value={form.correo} maxLength={150}
+                    onChange={e => update('correo', e.target.value)} />
                   {fieldErrors.correo && <span className="field-error">{fieldErrors.correo}</span>}
                 </div>
               </div>
@@ -466,6 +385,7 @@ export default function CitasPublicClient() {
                 <div className="service-options">
                   {servicios.map(s => (
                     <button
+                      type="button"
                       key={s.id}
                       className={`service-opt${form.servicio_id === s.id ? ' service-opt--selected' : ''}`}
                       onClick={() => selectServicio(s)}
@@ -474,11 +394,6 @@ export default function CitasPublicClient() {
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                       </svg>
                       {s.nombre}
-                      {s.duracion_minutos > 0 && (
-                        <span style={{ marginLeft: 'auto', fontSize: '0.75rem', opacity: 0.6, fontWeight: 400 }}>
-                          {s.duracion_minutos} min
-                        </span>
-                      )}
                       {form.servicio_id === s.id && (
                         <svg className="service-opt__check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
                           <polyline points="20 6 9 17 4 12"/>
@@ -490,13 +405,9 @@ export default function CitasPublicClient() {
               )}
               <div className="form-group" style={{ marginTop: '1.5rem' }}>
                 <label>Notas adicionales <span>(opcional)</span></label>
-                <textarea
-                  rows={3}
-                  maxLength={500}
+                <textarea rows={3} maxLength={500}
                   placeholder="¿Tienes alguna preocupación específica o quieres que sepamos algo antes de tu cita?"
-                  value={form.notas}
-                  onChange={e => update('notas', e.target.value)}
-                />
+                  value={form.notas} onChange={e => update('notas', e.target.value)} />
               </div>
             </div>
           )}
@@ -506,10 +417,7 @@ export default function CitasPublicClient() {
             <div className="appt-step">
               <h2>Elige la fecha</h2>
               <p className="appt-step__sub">Selecciona el día que mejor se adapte a tu agenda. Los domingos no hay atención.</p>
-              <CalendarPicker
-                selectedDate={form.fecha}
-                onSelect={date => update('fecha', date)}
-              />
+              <CalendarPicker selectedDate={form.fecha} onSelect={date => update('fecha', date)} />
             </div>
           )}
 
@@ -523,7 +431,6 @@ export default function CitasPublicClient() {
                   {form.fecha ? new Date(form.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }) : ''}
                 </strong>
               </p>
-              {error && <p className="appt-error" style={{ marginBottom: '1rem' }}>{error}</p>}
               <TimeSlotPicker
                 selectedTime={form.hora}
                 onSelect={h => { update('hora', h); setError('') }}
@@ -539,14 +446,14 @@ export default function CitasPublicClient() {
               <p className="appt-step__sub">Revisa los datos antes de enviar.</p>
               <div className="summary">
                 {[
-                  { label: 'Nombre',    value: form.nombre },
-                  { label: 'Cédula',    value: form.cedula },
-                  { label: 'Teléfono',  value: form.telefono },
-                  { label: 'Correo',    value: form.correo || '—' },
-                  { label: 'Servicio',  value: `${form.servicio_nombre} (${form.duracion_minutos} min)` },
-                  { label: 'Fecha',     value: new Date(form.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
-                  { label: 'Hora',      value: `${form.hora} – ${calcularHoraFin(form.hora, form.duracion_minutos)}` },
-                  { label: 'Notas',     value: form.notas || '—' },
+                  { label: 'Nombre',   value: form.nombre },
+                  { label: 'Cédula',   value: form.cedula },
+                  { label: 'Teléfono', value: form.telefono },
+                  { label: 'Correo',   value: form.correo || '—' },
+                  { label: 'Servicio', value: form.servicio },
+                  { label: 'Fecha',    value: new Date(form.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
+                  { label: 'Hora',     value: form.hora },
+                  { label: 'Notas',    value: form.notas || '—' },
                 ].map(({ label, value }) => (
                   <div key={label} className="summary__row">
                     <span className="summary__label">{label}</span>
@@ -555,16 +462,6 @@ export default function CitasPublicClient() {
                 ))}
               </div>
               {error && <p className="appt-error">{error}</p>}
-            </div>
-          )}
-
-          {/* Error banner — visible above navigation on any step */}
-          {error && step === 4 && (
-            <div className="appt-error-banner" role="alert">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-              </svg>
-              {error}
             </div>
           )}
 
@@ -578,22 +475,12 @@ export default function CitasPublicClient() {
             )}
             <div style={{ flex: 1 }} />
             {step < 4 ? (
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={!canAdvance()}
-                onClick={handleNext}
-              >
+              <button type="button" className="btn btn-primary" disabled={!canAdvance()} onClick={handleNext}>
                 Continuar
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
               </button>
             ) : (
-              <button
-                type="button"
-                className="btn btn-primary"
-                disabled={loading}
-                onClick={handleSubmit}
-              >
+              <button type="button" className="btn btn-primary" disabled={loading} onClick={handleSubmit}>
                 {loading ? 'Enviando…' : 'Confirmar cita'}
                 {!loading && (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
