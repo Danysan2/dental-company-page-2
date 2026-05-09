@@ -5,6 +5,7 @@ import { prisma }            from '@/lib/prisma'
 import { getSession, requireSession } from '@/lib/auth'
 import { Unauthorized, BadRequest, ServerError } from '@/lib/apiErrors'
 import { validarFecha, validarHora, sanitizarTexto } from '@/lib/validators'
+import { agregarCitaSheets, actualizarCalendarEventId, crearEventoCalendar } from '@/lib/google'
 
 const VALID_ESTADOS = ['programada', 'completada', 'cancelada', 'no_asistio'] as const
 
@@ -105,9 +106,41 @@ export async function POST(req: NextRequest) {
       },
       include: {
         cliente:  { select: { id: true, nombre: true, telefono: true, correo: true, cedula: true } },
-        servicio: { select: { id: true, nombre: true, precio: true } },
+        servicio: { select: { id: true, nombre: true, precio: true, duracion: true } },
       },
     })
+
+    // ── Sync con Google Sheets y Calendar (no bloquea si falla) ─────────────
+    void (async () => {
+      try {
+        const citaData = {
+          id:              cita.id,
+          clienteId:       cita.clienteId,
+          clienteTelefono: cita.cliente.telefono ?? '',
+          clienteNombre:   cita.cliente.nombre,
+          servicioId:      cita.servicioId,
+          servicioNombre:  cita.servicio.nombre,
+          precio:          cita.precio ?? cita.servicio.precio,
+          fecha:           cita.fecha.toISOString().slice(0, 10),
+          hora:            cita.hora,
+          duracionMinutos: cita.servicio.duracion ?? 60,
+          estado:          cita.estado,
+          notas:           cita.notas,
+          createdAt:       cita.createdAt,
+        }
+
+        const filaSheets = await agregarCitaSheets(citaData)
+
+        const eventId = await crearEventoCalendar(citaData)
+
+        if (filaSheets && eventId) {
+          await actualizarCalendarEventId(filaSheets, eventId)
+        }
+      } catch (syncErr) {
+        console.error('[POST /api/citas] Error en sync Google:', syncErr)
+      }
+    })()
+    // ────────────────────────────────────────────────────────────────────────
 
     return NextResponse.json({
       id:               cita.id,
