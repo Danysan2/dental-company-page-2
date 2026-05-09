@@ -228,3 +228,120 @@ export async function crearEventoCalendar(cita: CitaGoogleData): Promise<string 
     return null
   }
 }
+
+/**
+ * Elimina un evento de Google Calendar por su event ID.
+ */
+export async function eliminarEventoCalendar(calendarEventId: string): Promise<void> {
+  const calendarId = process.env.GOOGLE_CALENDAR_ID
+  if (!calendarId || !calendarEventId) return
+
+  try {
+    const auth     = getAuth()
+    const calendar = google.calendar({ version: 'v3', auth })
+
+    await calendar.events.delete({ calendarId, eventId: calendarEventId })
+  } catch (err: unknown) {
+    // 410 Gone = ya fue eliminado previamente, no es error crítico
+    const status = (err as { code?: number })?.code
+    if (status !== 410) {
+      console.error('[Google Calendar] Error al eliminar evento:', err)
+    }
+  }
+}
+
+// ─── Sheets — búsqueda y actualización ───────────────────────────────────────
+
+export interface FilaCitaSheets {
+  fila:            number   // número de fila (base 1, incluye cabecera)
+  calendarEventId: string   // columna L
+}
+
+/**
+ * Busca la fila de una cita en Sheets por su ID (columna A).
+ * Devuelve { fila, calendarEventId } o null si no se encuentra.
+ */
+export async function buscarFilaCitaSheets(citaId: string): Promise<FilaCitaSheets | null> {
+  const sheetsId = process.env.GOOGLE_SHEETS_ID
+  if (!sheetsId) return null
+
+  try {
+    const auth   = getAuth()
+    const sheets = google.sheets({ version: 'v4', auth })
+
+    // Leer columnas A y L de toda la hoja
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetsId,
+      range:         'citas!A:L',
+    })
+
+    const rows = res.data.values ?? []
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i][0] === citaId) {
+        return {
+          fila:            i + 1,          // Sheets es base 1
+          calendarEventId: rows[i][11] ?? '', // columna L (índice 11)
+        }
+      }
+    }
+    return null
+  } catch (err) {
+    console.error('[Google Sheets] Error al buscar cita:', err)
+    return null
+  }
+}
+
+export interface ActualizacionCitaSheets {
+  fecha?:  string  // YYYY-MM-DD
+  hora?:   string  // HH:MM
+  estado?: string
+  duracionMinutos?: number
+  calendarEventId?: string
+}
+
+/**
+ * Actualiza los campos relevantes de una fila existente en Sheets.
+ * Usado para reagendamiento (H, I, J, N) y cancelación (K, N).
+ */
+export async function actualizarCitaSheets(
+  fila: number,
+  datos: ActualizacionCitaSheets,
+): Promise<void> {
+  const sheetsId = process.env.GOOGLE_SHEETS_ID
+  if (!sheetsId) return
+
+  try {
+    const auth   = getAuth()
+    const sheets = google.sheets({ version: 'v4', auth })
+    const now    = new Date().toISOString()
+
+    const updates: { range: string; values: unknown[][] }[] = []
+
+    if (datos.fecha) {
+      updates.push({ range: `citas!H${fila}`, values: [[formatFechaSheets(datos.fecha)]] })
+    }
+    if (datos.hora) {
+      updates.push({ range: `citas!I${fila}`, values: [[datos.hora]] })
+      const duracion = datos.duracionMinutos ?? 60
+      updates.push({ range: `citas!J${fila}`, values: [[calcularHoraFin(datos.hora, duracion)]] })
+    }
+    if (datos.estado) {
+      updates.push({ range: `citas!K${fila}`, values: [[datos.estado]] })
+    }
+    if (datos.calendarEventId !== undefined) {
+      updates.push({ range: `citas!L${fila}`, values: [[datos.calendarEventId]] })
+    }
+    // Siempre actualizar fecha_modificacion (col N)
+    updates.push({ range: `citas!N${fila}`, values: [[now]] })
+
+    await sheets.spreadsheets.values.batchUpdate({
+      spreadsheetId: sheetsId,
+      requestBody: {
+        valueInputOption: 'USER_ENTERED',
+        data: updates,
+      },
+    })
+  } catch (err) {
+    console.error('[Google Sheets] Error al actualizar cita:', err)
+  }
+}
