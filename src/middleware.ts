@@ -9,6 +9,7 @@ const API_PUBLIC   = [
   '/api/auth/logout',
   '/api/servicios',
   '/api/citas/disponibilidad',
+  '/api/sync/cita',
 ]
 
 // POST-only public routes (public booking flow)
