@@ -1,7 +1,7 @@
 # ── Stage 1: Dependencies ─────────────────────────────────────
-FROM node:20-alpine AS deps
+FROM node:20-slim AS deps
 
-RUN apk add --no-cache openssl
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -9,9 +9,9 @@ COPY package*.json ./
 RUN npm ci --prefer-offline
 
 # ── Stage 2: Builder ──────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:20-slim AS builder
 
-RUN apk add --no-cache openssl
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
@@ -34,19 +34,19 @@ ENV NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=$NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
 ENV NEXT_PUBLIC_CLINICA_EMAIL=$NEXT_PUBLIC_CLINICA_EMAIL
 ENV JWT_SECRET=$JWT_SECRET
 
-RUN node_modules/.bin/prisma generate
+RUN node --stack-size=65536 node_modules/prisma/build/index.js generate
 RUN npm run build
 
 # ── Stage 3: Runner ───────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:20-slim AS runner
 
-RUN apk add --no-cache openssl
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
+RUN groupadd -g 1001 nodejs && useradd -u 1001 -g nodejs nextjs
 
 # Standalone build
 COPY --from=builder /app/public                         ./public
