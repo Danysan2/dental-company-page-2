@@ -6,7 +6,7 @@ RUN apk add --no-cache openssl
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # ── Stage 2: Builder ──────────────────────────────────────────
 FROM node:20-alpine AS builder
