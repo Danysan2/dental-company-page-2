@@ -34,7 +34,7 @@ ENV NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=$NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
 ENV NEXT_PUBLIC_CLINICA_EMAIL=$NEXT_PUBLIC_CLINICA_EMAIL
 ENV JWT_SECRET=$JWT_SECRET
 
-RUN node --stack-size=65536 node_modules/prisma/build/index.js generate
+RUN node --stack-size=8192 node_modules/prisma/build/index.js generate
 RUN npm run build
 
 # ── Stage 3: Runner ───────────────────────────────────────────
