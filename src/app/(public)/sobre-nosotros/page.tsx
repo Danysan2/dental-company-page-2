@@ -208,7 +208,7 @@ export default function About() {
                 width="100%"
                 height="380"
                 style={{ border: 0, borderRadius: '12px' }}
-                allowFullScreen=""
+                allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
               />
