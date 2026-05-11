@@ -34,7 +34,7 @@ const nextConfig = {
               "font-src 'self' data: https://fonts.gstatic.com",
               "img-src 'self' data: https: blob:",
               "connect-src 'self' https://api.emailjs.com https://service.elfsight.com https://dentalbot.clouddec.site",
-              "frame-src 'self' https://www.elfsight.com",
+              "frame-src 'self' https://www.elfsight.com https://www.google.com",
               "frame-ancestors 'self'",
               "base-uri 'self'",
               "form-action 'self'",
