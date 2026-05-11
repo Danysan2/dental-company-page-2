@@ -1,5 +1,5 @@
 # ── Stage 1: Dependencies ─────────────────────────────────────
-FROM node:20-alpine AS deps
+FROM node:18-alpine AS deps
 
 RUN apk add --no-cache openssl
 
@@ -9,7 +9,7 @@ COPY package*.json ./
 RUN npm ci --prefer-offline
 
 # ── Stage 2: Builder ──────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:18-alpine AS builder
 
 RUN apk add --no-cache openssl
 
@@ -38,7 +38,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # ── Stage 3: Runner ───────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:18-alpine AS runner
 
 RUN apk add --no-cache openssl
 
