@@ -95,7 +95,12 @@ export async function PUT(
     }
 
     // Save old fecha/hora for Sheets fallback search (before update)
-    const oldFecha = current.fecha.toISOString().slice(0, 10) // YYYY-MM-DD
+    // Use UTC date parts directly to avoid timezone shift (dates stored as midnight UTC)
+    const oldFecha = [
+      current.fecha.getUTCFullYear(),
+      String(current.fecha.getUTCMonth() + 1).padStart(2, '0'),
+      String(current.fecha.getUTCDate()).padStart(2, '0'),
+    ].join('-') // YYYY-MM-DD
     const oldHora  = current.hora
     const oldTelefono = current.cliente.telefono ?? ''
 
@@ -209,7 +214,11 @@ export async function DELETE(
     })
     if (!citaActual) return NotFound('Cita no encontrada')
 
-    const delFecha = citaActual.fecha.toISOString().slice(0, 10)
+    const delFecha = [
+      citaActual.fecha.getUTCFullYear(),
+      String(citaActual.fecha.getUTCMonth() + 1).padStart(2, '0'),
+      String(citaActual.fecha.getUTCDate()).padStart(2, '0'),
+    ].join('-') // YYYY-MM-DD
     const delHora  = citaActual.hora
     const delTel   = citaActual.cliente.telefono ?? ''
 
