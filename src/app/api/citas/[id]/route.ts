@@ -7,9 +7,11 @@ import { NotFound, BadRequest, ServerError } from '@/lib/apiErrors'
 import { validarFecha, validarHora, validarUUID } from '@/lib/validators'
 import {
   buscarFilaCitaSheets,
+  buscarFilaCitaPorDatos,
   actualizarCitaSheets,
   eliminarEventoCalendar,
   crearEventoCalendar,
+  type FilaCitaSheets,
 } from '@/lib/google'
 
 const VALID_ESTADOS = ['programada', 'completada', 'cancelada', 'no_asistio'] as const
@@ -72,11 +74,17 @@ export async function PUT(
       return BadRequest('Precio inválido')
     }
 
+    // Fetch current cita (needed for availability check and Sheets fallback search)
+    const current = await prisma.cita.findUnique({
+      where: { id },
+      include: {
+        cliente: { select: { telefono: true } },
+      },
+    })
+    if (!current) return NotFound('Cita no encontrada')
+
     // Check availability if date/time changes
     if (fecha || hora) {
-      const current = await prisma.cita.findUnique({ where: { id } })
-      if (!current) return NotFound('Cita no encontrada')
-
       const newFecha = fecha ? new Date(fecha) : current.fecha
       const newHora  = hora  ?? current.hora
 
@@ -85,6 +93,11 @@ export async function PUT(
       })
       if (conflict) return BadRequest('Ese horario ya está ocupado')
     }
+
+    // Save old fecha/hora for Sheets fallback search (before update)
+    const oldFecha = current.fecha.toISOString().slice(0, 10) // YYYY-MM-DD
+    const oldHora  = current.hora
+    const oldTelefono = current.cliente.telefono ?? ''
 
     const cita = await prisma.cita.update({
       where: { id },
@@ -106,20 +119,28 @@ export async function PUT(
     // ── Sync Google (no bloquea si falla) ────────────────────────────────────
     void (async () => {
       try {
-        const filaInfo = await buscarFilaCitaSheets(id)
-        if (!filaInfo) return
+        // Buscar por UUID primero, si no se encuentra buscar por tel+fecha+hora
+        // (citas creadas por el chatbot tienen ID diferente en Sheets)
+        let filaInfo: FilaCitaSheets | null = await buscarFilaCitaSheets(id)
+        if (!filaInfo) {
+          const [y, m, d] = oldFecha.split('-')
+          const fechaSheets = `${d}/${m}/${y}` // DD/MM/YYYY
+          filaInfo = await buscarFilaCitaPorDatos(oldTelefono, fechaSheets, oldHora)
+        }
+        if (!filaInfo) {
+          console.warn('[PUT /api/citas/:id] Cita no encontrada en Sheets para sync:', id)
+          return
+        }
 
         const esCancelacion = estado === 'cancelada'
         const esReagendamiento = !!(fecha || hora)
 
         if (esCancelacion) {
-          // Actualizar estado en Sheets + eliminar evento en Calendar
           await actualizarCitaSheets(filaInfo.fila, { estado: 'cancelada' })
           if (filaInfo.calendarEventId) {
             await eliminarEventoCalendar(filaInfo.calendarEventId)
           }
         } else if (esReagendamiento) {
-          // Eliminar evento viejo, crear nuevo, actualizar Sheets
           if (filaInfo.calendarEventId) {
             await eliminarEventoCalendar(filaInfo.calendarEventId)
           }
@@ -152,11 +173,8 @@ export async function PUT(
           const nuevoEventId = await crearEventoCalendar(nuevaData)
           if (nuevoEventId) {
             await actualizarCitaSheets(filaInfo.fila, { calendarEventId: nuevoEventId })
-          } else {
-            console.error('[PUT /api/citas/:id] crearEventoCalendar falló para cita.id:', id)
           }
         } else if (estado) {
-          // Solo cambio de estado (ej: completada, no_asistio)
           await actualizarCitaSheets(filaInfo.fila, { estado })
         }
       } catch (syncErr) {
@@ -184,6 +202,17 @@ export async function DELETE(
     const uuidErr = validarUUID(id)
     if (uuidErr) return BadRequest(uuidErr)
 
+    // Get current data before cancelling (for Sheets fallback search)
+    const citaActual = await prisma.cita.findUnique({
+      where: { id },
+      include: { cliente: { select: { telefono: true } } },
+    })
+    if (!citaActual) return NotFound('Cita no encontrada')
+
+    const delFecha = citaActual.fecha.toISOString().slice(0, 10)
+    const delHora  = citaActual.hora
+    const delTel   = citaActual.cliente.telefono ?? ''
+
     await prisma.cita.update({
       where: { id },
       data:  { estado: 'cancelada' },
@@ -192,8 +221,16 @@ export async function DELETE(
     // ── Sync Google (no bloquea si falla) ────────────────────────────────────
     void (async () => {
       try {
-        const filaInfo = await buscarFilaCitaSheets(id)
-        if (!filaInfo) return
+        let filaInfo: FilaCitaSheets | null = await buscarFilaCitaSheets(id)
+        if (!filaInfo) {
+          const [y, m, d] = delFecha.split('-')
+          const fechaSheets = `${d}/${m}/${y}`
+          filaInfo = await buscarFilaCitaPorDatos(delTel, fechaSheets, delHora)
+        }
+        if (!filaInfo) {
+          console.warn('[DELETE /api/citas/:id] Cita no encontrada en Sheets para sync:', id)
+          return
+        }
         await actualizarCitaSheets(filaInfo.fila, { estado: 'cancelada' })
         if (filaInfo.calendarEventId) {
           await eliminarEventoCalendar(filaInfo.calendarEventId)

@@ -293,6 +293,55 @@ export async function buscarFilaCitaSheets(citaId: string): Promise<FilaCitaShee
   }
 }
 
+/**
+ * Busca la fila de una cita en Sheets por teléfono + fecha + hora.
+ * Útil para citas creadas por el chatbot (ID diferente al UUID de Postgres).
+ * Devuelve { fila, calendarEventId } o null si no se encuentra.
+ */
+export async function buscarFilaCitaPorDatos(
+  telefono: string,
+  fecha: string,    // DD/MM/YYYY (formato Sheets)
+  hora: string,     // HH:MM
+): Promise<FilaCitaSheets | null> {
+  const sheetsId = process.env.GOOGLE_SHEETS_ID
+  if (!sheetsId) return null
+
+  try {
+    const auth   = getAuth()
+    const sheets = google.sheets({ version: 'v4', auth })
+
+    const res = await sheets.spreadsheets.values.get({
+      spreadsheetId: sheetsId,
+      range:         'citas!A:L',
+    })
+
+    const rows = res.data.values ?? []
+    // Normalizar teléfono: últimos 10 dígitos
+    const telSufijo = telefono.replace(/\D/g, '').slice(-10)
+
+    for (let i = 0; i < rows.length; i++) {
+      const rowTel   = (rows[i][2] ?? '').replace(/\D/g, '').slice(-10) // col C
+      const rowFecha = rows[i][7] ?? ''  // col H (DD/MM/YYYY)
+      const rowHora  = rows[i][8] ?? ''  // col I (HH:MM)
+      const rowEstado = rows[i][10] ?? '' // col K
+
+      if (rowTel === telSufijo &&
+          rowFecha === fecha &&
+          rowHora === hora &&
+          rowEstado !== 'cancelada') {
+        return {
+          fila:            i + 1,
+          calendarEventId: rows[i][11] ?? '',
+        }
+      }
+    }
+    return null
+  } catch (err) {
+    console.error('[Google Sheets] Error al buscar cita por datos:', err)
+    return null
+  }
+}
+
 export interface ActualizacionCitaSheets {
   fecha?:  string  // YYYY-MM-DD
   hora?:   string  // HH:MM
