@@ -1,7 +1,7 @@
 # ── Stage 1: Dependencies ─────────────────────────────────────
-FROM node:20-slim AS deps
+FROM node:20-alpine AS deps
 
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 
@@ -9,9 +9,9 @@ COPY package*.json ./
 RUN npm ci --prefer-offline
 
 # ── Stage 2: Builder ──────────────────────────────────────────
-FROM node:20-slim AS builder
+FROM node:20-alpine AS builder
 
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 
@@ -38,15 +38,15 @@ RUN node_modules/.bin/prisma generate
 RUN npm run build
 
 # ── Stage 3: Runner ───────────────────────────────────────────
-FROM node:20-slim AS runner
+FROM node:20-alpine AS runner
 
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+RUN apk add --no-cache openssl
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 
-RUN groupadd -g 1001 nodejs && useradd -u 1001 -g nodejs nextjs
+RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
 # Standalone build
 COPY --from=builder /app/public                         ./public
