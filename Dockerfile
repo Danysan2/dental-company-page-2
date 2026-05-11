@@ -55,15 +55,14 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static     ./.next/static
 
 # Prisma runtime files
-COPY --from=builder /app/node_modules/.prisma           ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma           ./node_modules/@prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma           ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma           ./node_modules/@prisma
 
 # Seed script + its deps
-COPY --from=builder /app/prisma                         ./prisma
-COPY --from=builder /app/node_modules/bcryptjs          ./node_modules/bcryptjs
-COPY --from=builder /app/node_modules/@prisma           ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma            ./node_modules/prisma
-COPY --from=builder /app/node_modules/.bin/prisma       ./node_modules/.bin/prisma
+COPY --from=builder --chown=nextjs:nodejs /app/prisma                         ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/bcryptjs          ./node_modules/bcryptjs
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma            ./node_modules/prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin/prisma       ./node_modules/.bin/prisma
 
 # Entrypoint script
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
