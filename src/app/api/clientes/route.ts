@@ -90,10 +90,32 @@ export async function POST(req: NextRequest) {
     if (errTelefono) return BadRequest(errTelefono)
     if (errCorreo)   return BadRequest(errCorreo)
 
-    // buscar o crear por cédula
+    // 1. Buscar por cédula (prioritario)
     if (cedula) {
       const existing = await prisma.cliente.findUnique({ where: { cedula } })
       if (existing) return NextResponse.json(existing)
+    }
+
+    // 2. Fallback: buscar por últimos 10 dígitos del teléfono
+    //    El chatbot crea clientes sin cédula con formato "573XXXXXXXXXX".
+    //    Si encontramos al cliente por teléfono, lo reutilizamos y opcionalmente
+    //    le asignamos la cédula para evitar duplicados.
+    if (telefono) {
+      const telSufijo = telefono.replace(/\D/g, '').slice(-10)
+      const byPhone = await prisma.cliente.findFirst({
+        where: { telefono: { endsWith: telSufijo }, activo: true },
+      })
+      if (byPhone) {
+        // Si el cliente no tenía cédula, actualizarla ahora que la tenemos
+        if (cedula && !byPhone.cedula) {
+          const updated = await prisma.cliente.update({
+            where: { id: byPhone.id },
+            data: { cedula },
+          })
+          return NextResponse.json(updated)
+        }
+        return NextResponse.json(byPhone)
+      }
     }
 
     const cliente = await prisma.cliente.create({

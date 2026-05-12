@@ -51,6 +51,17 @@ function formatFechaSheets(fecha: string): string {
   return `${d}/${m}/${y}`
 }
 
+/**
+ * Normaliza un teléfono colombiano al formato que usa el chatbot en Sheets: "57XXXXXXXXXX".
+ * El chatbot guarda y busca con código de país. El formulario web solo guarda 10 dígitos.
+ * Sin esta normalización, el chatbot no encuentra las citas creadas desde la web.
+ */
+function normalizePhoneSheets(phone: string): string {
+  const digits = phone.replace(/\D/g, '')
+  if (digits.length <= 10) return '57' + digits.slice(-10)
+  return digits // ya tiene código de país
+}
+
 /** Calcula hora_fin sumando duracionMinutos a hora_inicio "HH:MM" */
 function calcularHoraFin(horaInicio: string, duracionMinutos: number): string {
   const [h, min] = horaInicio.split(':').map(Number)
@@ -110,7 +121,7 @@ export async function agregarCitaSheets(cita: CitaGoogleData): Promise<number | 
     const row = [
       cita.id,
       cita.clienteId,
-      cita.clienteTelefono,
+      normalizePhoneSheets(cita.clienteTelefono),
       cita.clienteNombre,
       cita.servicioId,
       cita.servicioNombre,
