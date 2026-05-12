@@ -33,7 +33,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' data: https://fonts.gstatic.com",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://api.emailjs.com https://service.elfsight.com https://core.service.elfsight.com https://dentalbot.clouddec.site https://maps.googleapis.com",
+              "connect-src 'self' https://api.emailjs.com https://service.elfsight.com https://core.service.elfsight.com https://widget-data.service.elfsight.com https://dentalbot.clouddec.site https://maps.googleapis.com",
               "frame-src 'self' https://www.elfsight.com https://www.google.com",
               "frame-ancestors 'self'",
               "base-uri 'self'",
