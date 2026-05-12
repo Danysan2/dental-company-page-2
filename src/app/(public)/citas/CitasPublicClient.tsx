@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import Link from 'next/link'
 import { HORARIOS } from '@/lib/helpers'
 import { validarNombre, validarCedula, validarTelefono, validarCorreo } from '@/lib/validators'
 import './Appointments.css'
@@ -130,7 +129,7 @@ const WA_PHONE   = '573000000000'
 const WA_MESSAGE = encodeURIComponent('Hola 👋 Me comunico desde la página web de Dental Company. Me gustaría agendar una cita. ¿Podrían indicarme disponibilidad? 🦷')
 
 function StepBar({ step }: { step: number }) {
-  const steps = ['Datos personales', 'Servicio', 'Fecha', 'Hora', 'Confirmación']
+  const steps = ['Datos personales', 'Fecha', 'Hora', 'Confirmación']
   const pct = Math.round((step / (steps.length - 1)) * 100)
   return (
     <div className="step-bar">
@@ -163,8 +162,7 @@ const INITIAL_FORM = {
 export default function CitasPublicClient() {
   const [step,           setStep]           = useState(0)
   const [form,           setForm]           = useState(INITIAL_FORM)
-  const [servicios,      setServicios]      = useState<Servicio[]>([])
-  const [loadingServ,    setLoadingServ]    = useState(true)
+  const [servError,      setServError]      = useState('')
   const [availableSlots, setAvailableSlots] = useState<string[] | null>(null)
   const [loading,        setLoading]        = useState(false)
   const [success,        setSuccess]        = useState(false)
@@ -173,19 +171,22 @@ export default function CitasPublicClient() {
   const slotVersionRef  = useRef(0)
   const submitInFlight  = useRef(false)
 
-  // Cargar servicios al montar
+  // Auto-load "consulta general" service on mount
   useEffect(() => {
     fetch('/api/servicios')
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
-      .then(data => setServicios(Array.isArray(data) ? data : []))
-      .catch(err => {
-        setServicios([])
-        setError('No pudimos cargar los servicios: ' + (err?.message ?? 'Error desconocido'))
+      .then((data: Servicio[]) => {
+        const consulta = data.find(s => s.nombre.toLowerCase().includes('consulta'))
+        if (consulta) {
+          setForm(f => ({ ...f, servicio_id: consulta.id, servicio: consulta.nombre, precio: consulta.precio ?? 0 }))
+        } else {
+          setServError('No hay consultas disponibles en este momento. Contáctanos por WhatsApp.')
+        }
       })
-      .finally(() => setLoadingServ(false))
+      .catch(() => setServError('No pudimos cargar el servicio. Intenta de nuevo.'))
   }, [])
 
-  // Cargar slots disponibles cuando cambia la fecha
+  // Load available slots when date changes
   useEffect(() => {
     if (!form.fecha) return
     setAvailableSlots(null)
@@ -209,10 +210,6 @@ export default function CitasPublicClient() {
 
   const update = (field: string, value: string | number) => setForm(f => ({ ...f, [field]: value }))
 
-  const selectServicio = (s: Servicio) => {
-    setForm(f => ({ ...f, servicio_id: s.id, servicio: s.nombre, precio: s.precio ?? 0 }))
-  }
-
   const isNombreValid   = () => !validarNombre(form.nombre) && !!form.nombre.trim()
   const isCedulaValid   = () => !!form.cedula.trim() && !validarCedula(form.cedula)
   const isTelefonoValid = () => !!form.telefono.trim() && !validarTelefono(form.telefono)
@@ -229,9 +226,8 @@ export default function CitasPublicClient() {
 
   const canAdvance = () => {
     if (step === 0) return isNombreValid() && isCedulaValid() && isTelefonoValid() && isCorreoValid()
-    if (step === 1) return !!form.servicio_id
-    if (step === 2) return !!form.fecha
-    if (step === 3) return !!form.hora
+    if (step === 1) return !!form.fecha
+    if (step === 2) return !!form.hora
     return true
   }
 
@@ -247,6 +243,10 @@ export default function CitasPublicClient() {
 
   const handleSubmit = async () => {
     if (submitInFlight.current) return
+    if (!form.servicio_id) {
+      setError('No se pudo cargar el servicio. Recarga la página o contáctanos por WhatsApp.')
+      return
+    }
     submitInFlight.current = true
     setLoading(true)
     setError('')
@@ -286,7 +286,7 @@ export default function CitasPublicClient() {
     } catch (e: unknown) {
       const msg = (e as Error).message ?? ''
       if (msg.includes('horario') || msg.includes('ocupado')) {
-        setError('Ese horario ya fue tomado. Por favor elige otra hora.')
+        setError('Ese horario ya fue tomado. Por favor regresa y elige otra hora.')
       } else {
         setError(msg || 'Hubo un problema al registrar tu cita. Intenta de nuevo.')
       }
@@ -294,6 +294,21 @@ export default function CitasPublicClient() {
       submitInFlight.current = false
       setLoading(false)
     }
+  }
+
+  if (servError) {
+    return (
+      <main className="appointments">
+        <div className="container appt-wrap">
+          <div className="appt-card" style={{ textAlign: 'center', padding: '2rem' }}>
+            <p style={{ color: '#dc3545', marginBottom: '1rem' }}>{servError}</p>
+            <a href={`https://wa.me/${WA_PHONE}?text=${WA_MESSAGE}`} target="_blank" rel="noreferrer" className="btn btn-outline">
+              Escribir por WhatsApp
+            </a>
+          </div>
+        </div>
+      </main>
+    )
   }
 
   if (success) {
@@ -308,14 +323,22 @@ export default function CitasPublicClient() {
             </div>
             <h2>¡Cita registrada!</h2>
             <p>
-              Gracias <strong>{form.nombre}</strong>, tu cita para <strong>{form.servicio}</strong> el{' '}
+              Gracias <strong>{form.nombre}</strong>, tu cita de <strong>{form.servicio}</strong> el{' '}
               <strong>{form.fecha}</strong> a las <strong>{form.hora}</strong> ha sido registrada.
             </p>
             <p className="appt-success__note">
               Te contactaremos al {form.telefono} para confirmar tu cita.
               {form.correo && ` También te enviaremos un recordatorio a ${form.correo}.`}
             </p>
-            <button type="button" className="btn btn-primary" onClick={() => { setSuccess(false); setForm(INITIAL_FORM); setStep(0) }}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                setSuccess(false)
+                setForm(f => ({ ...INITIAL_FORM, servicio_id: f.servicio_id, servicio: f.servicio, precio: f.precio }))
+                setStep(0)
+              }}
+            >
               Agendar otra cita
             </button>
           </div>
@@ -369,54 +392,18 @@ export default function CitasPublicClient() {
                     onChange={e => update('correo', e.target.value)} />
                   {fieldErrors.correo && <span className="field-error">{fieldErrors.correo}</span>}
                 </div>
+                <div className="form-group">
+                  <label>Notas adicionales <span>(opcional)</span></label>
+                  <textarea rows={3} maxLength={500}
+                    placeholder="¿Tienes alguna preocupación específica o quieres que sepamos algo antes de tu cita?"
+                    value={form.notas} onChange={e => update('notas', e.target.value)} />
+                </div>
               </div>
             </div>
           )}
 
-          {/* STEP 1 – Servicio */}
+          {/* STEP 1 – Fecha */}
           {step === 1 && (
-            <div className="appt-step">
-              <h2>Selecciona el servicio</h2>
-              <p className="appt-step__sub">¿Qué tratamiento necesitas?</p>
-              {loadingServ ? (
-                <div style={{ color: 'var(--text-3)', padding: '1rem 0' }}>Cargando servicios…</div>
-              ) : servicios.length === 0 ? (
-                <div style={{ color: '#dc3545', padding: '1rem 0', fontSize: '0.9rem' }}>
-                  {error || 'No hay servicios disponibles en este momento. Contáctanos por WhatsApp.'}
-                </div>
-              ) : (
-                <div className="service-options">
-                  {servicios.map(s => (
-                    <button
-                      type="button"
-                      key={s.id}
-                      className={`service-opt${form.servicio_id === s.id ? ' service-opt--selected' : ''}`}
-                      onClick={() => selectServicio(s)}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                      </svg>
-                      {s.nombre}
-                      {form.servicio_id === s.id && (
-                        <svg className="service-opt__check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className="form-group" style={{ marginTop: '1.5rem' }}>
-                <label>Notas adicionales <span>(opcional)</span></label>
-                <textarea rows={3} maxLength={500}
-                  placeholder="¿Tienes alguna preocupación específica o quieres que sepamos algo antes de tu cita?"
-                  value={form.notas} onChange={e => update('notas', e.target.value)} />
-              </div>
-            </div>
-          )}
-
-          {/* STEP 2 – Fecha */}
-          {step === 2 && (
             <div className="appt-step">
               <h2>Elige la fecha</h2>
               <p className="appt-step__sub">Selecciona el día que mejor se adapte a tu agenda. Los domingos no hay atención.</p>
@@ -424,8 +411,8 @@ export default function CitasPublicClient() {
             </div>
           )}
 
-          {/* STEP 3 – Hora */}
-          {step === 3 && (
+          {/* STEP 2 – Hora */}
+          {step === 2 && (
             <div className="appt-step">
               <h2>Elige la hora</h2>
               <p className="appt-step__sub">
@@ -442,8 +429,8 @@ export default function CitasPublicClient() {
             </div>
           )}
 
-          {/* STEP 4 – Confirmación */}
-          {step === 4 && (
+          {/* STEP 3 – Confirmación */}
+          {step === 3 && (
             <div className="appt-step">
               <h2>Confirmar cita</h2>
               <p className="appt-step__sub">Revisa los datos antes de enviar.</p>
@@ -477,7 +464,7 @@ export default function CitasPublicClient() {
               </button>
             )}
             <div style={{ flex: 1 }} />
-            {step < 4 ? (
+            {step < 3 ? (
               <button type="button" className="btn btn-primary" disabled={!canAdvance()} onClick={handleNext}>
                 Continuar
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>

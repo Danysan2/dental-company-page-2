@@ -88,6 +88,14 @@ export async function POST(req: NextRequest) {
     }
     const notasSanitizadas = notas ? sanitizarTexto(notas).slice(0, 500) : null
 
+    // Rate limit: max 2 pending appointments per client
+    const citasPendientes = await prisma.cita.count({
+      where: { clienteId, estado: 'programada' },
+    })
+    if (citasPendientes >= 2) {
+      return BadRequest('Ya tienes citas pendientes agendadas. Cancela una antes de agendar otra.')
+    }
+
     // Check availability
     const conflict = await prisma.cita.findFirst({
       where: { fecha: new Date(fecha), hora, estado: { not: 'cancelada' } },
