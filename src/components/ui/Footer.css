@@ -26,7 +26,7 @@
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
-  filter: brightness(0) invert(1);
+  filter: brightness(0) saturate(100%) invert(42%) sepia(25%) saturate(700%) hue-rotate(345deg) brightness(95%);
   opacity: 0.9;
 }
 

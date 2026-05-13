@@ -204,7 +204,7 @@ export default function About() {
             <div className="location-map">
               <iframe
                 title="Ubicación Dental Company"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3968.456987654321!2d-71.18!3d6.89!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e2c3d1d1d1d1d1d%3A0x1d1d1d1d1d1d1d1d!2sCalle%2019%20%2322-12%2C%20Barrio%20La%20Esperanza%2C%20Arauca!5e0!3m2!1ses!2sco!4v1234567890"
+                src="https://maps.google.com/maps?q=Calle+19+%2322-12+Barrio+La+Esperanza,+Arauca&t=&z=17&ie=UTF8&iwloc=&output=embed"
                 width="100%"
                 height="380"
                 style={{ border: 0, borderRadius: '12px' }}

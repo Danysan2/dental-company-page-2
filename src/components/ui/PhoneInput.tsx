@@ -3,18 +3,18 @@
 import { useState, useEffect } from 'react'
 
 export const SA_COUNTRIES = [
-  { code: '54',  flag: '🇦🇷', name: 'Argentina'  },
-  { code: '591', flag: '🇧🇴', name: 'Bolivia'    },
-  { code: '55',  flag: '🇧🇷', name: 'Brasil'     },
-  { code: '56',  flag: '🇨🇱', name: 'Chile'      },
-  { code: '57',  flag: '🇨🇴', name: 'Colombia'   },
-  { code: '593', flag: '🇪🇨', name: 'Ecuador'    },
-  { code: '592', flag: '🇬🇾', name: 'Guyana'     },
-  { code: '595', flag: '🇵🇾', name: 'Paraguay'   },
-  { code: '51',  flag: '🇵🇪', name: 'Perú'       },
-  { code: '597', flag: '🇸🇷', name: 'Surinam'    },
-  { code: '598', flag: '🇺🇾', name: 'Uruguay'    },
-  { code: '58',  flag: '🇻🇪', name: 'Venezuela'  },
+  { code: '54',  name: 'Argentina'  },
+  { code: '591', name: 'Bolivia'    },
+  { code: '55',  name: 'Brasil'     },
+  { code: '56',  name: 'Chile'      },
+  { code: '57',  name: 'Colombia'   },
+  { code: '593', name: 'Ecuador'    },
+  { code: '592', name: 'Guyana'     },
+  { code: '595', name: 'Paraguay'   },
+  { code: '51',  name: 'Perú'       },
+  { code: '597', name: 'Surinam'    },
+  { code: '598', name: 'Uruguay'    },
+  { code: '58',  name: 'Venezuela'  },
 ]
 
 // Ordenado por longitud desc para detectar "593" antes de "59"
@@ -88,11 +88,11 @@ export default function PhoneInput({
         onChange={e => handlePrefix(e.target.value)}
         disabled={disabled}
         aria-label="Prefijo de país"
-        style={{ flex: '0 0 auto', minWidth: '150px', maxWidth: '170px', cursor: 'pointer' }}
+        style={{ flex: '0 0 auto', minWidth: '80px', maxWidth: '110px', cursor: 'pointer' }}
       >
         {SA_COUNTRIES.map(c => (
           <option key={c.code} value={c.code}>
-            {c.flag}  +{c.code} {c.name}
+            +{c.code} {c.name}
           </option>
         ))}
       </select>

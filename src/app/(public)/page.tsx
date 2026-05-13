@@ -4,14 +4,16 @@ import Link from 'next/link'
 import { useReveal } from '@/hooks/useReveal'
 import './Home.css'
 
-const WA_PHONE   = '573000000000'
+const WA_PHONE   = '573216252325'
 const WA_MESSAGE = encodeURIComponent('Hola 👋 Me comunico desde la página web de Dental Company. Me gustaría agendar una cita. ¿Podrían indicarme disponibilidad? 🦷')
 
 const services = [
-  { num: '01', title: 'Estética Dental',        desc: 'Diseño de sonrisa, carillas de porcelana y blanqueamiento para una transformación natural e imperceptible.', tag: 'Premium' },
-  { num: '02', title: 'Ortodoncia Invisible',    desc: 'Alineadores 3D digitales para corregir tu sonrisa de forma discreta, cómoda y altamente precisa.',          tag: 'Digital' },
-  { num: '03', title: 'Implantes Dentales',      desc: 'Restauración permanente con materiales biocompatibles de la más alta calidad para una sonrisa duradera.',    tag: 'Permanent' },
-  { num: '04', title: 'Odontología Preventiva',  desc: 'Limpiezas profundas y diagnóstico temprano para proteger tu salud bucal a largo plazo.',                    tag: 'Salud' },
+  { num: '01', title: 'Rehabilitación Oral y Estética Dental', desc: 'Diseño de sonrisa, carillas de porcelana y blanqueamiento para una transformación natural y duradera.',                 tag: 'Estética'  },
+  { num: '02', title: 'Articulación Temporomandibular',        desc: 'Diagnóstico y tratamiento del dolor mandibular, bruxismo y disfunciones de la ATM con enfoque integral.',               tag: 'ATM'       },
+  { num: '03', title: 'Endodoncia',                            desc: 'Tratamiento de conductos con tecnología de punta para salvar tu diente y eliminar el dolor de raíz.',                   tag: 'Salud'     },
+  { num: '04', title: 'Periodoncia',                           desc: 'Prevención y tratamiento de enfermedades de las encías para mantener unas bases sanas y fuertes.',                      tag: 'Encías'    },
+  { num: '05', title: 'Ortodoncia',                            desc: 'Brackets, alineadores y aparatología fija o removible para una sonrisa bien alineada a cualquier edad.',               tag: 'Estética'  },
+  { num: '06', title: 'Odontología General',                   desc: 'Consultas, limpiezas, obturaciones y diagnóstico preventivo para cuidar tu salud bucal en cada etapa de tu vida.',     tag: 'General'   },
 ]
 
 const testimonials = [
@@ -187,7 +189,7 @@ export default function Home() {
 
           <div className="services__grid">
             {services.map((s, i) => (
-              <Link href="/citas" key={i} className={`svc-card reveal d${i + 1} ${i === 0 ? 'svc-card--featured' : ''}`}>
+              <Link href="/citas" key={i} className={`svc-card reveal d${i + 1}`}>
                 <div className="svc-card__num">{s.num}</div>
                 <div className="svc-card__body">
                   <span className="svc-card__tag">{s.tag}</span>

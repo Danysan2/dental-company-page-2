@@ -374,10 +374,10 @@
   font-weight: 300;
 }
 
-/* Service cards grid — intentionally uneven */
+/* Service cards grid — 3×2 */
 .services__grid {
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
   align-items: stretch;
 }
@@ -845,8 +845,9 @@
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--text-3);
-  margin-top: auto;
+  margin-top: 0.5rem;
   padding-top: 0.75rem;
+  text-align: center;
 }
 
 .testi-flip__hint--back {

@@ -126,7 +126,7 @@ function TimeSlotPicker({ selectedTime, onSelect, availableSlots }: {
 }
 
 // ── Step indicator ──────────────────────────────────────────
-const WA_PHONE   = '573000000000'
+const WA_PHONE   = '573216252325'
 const WA_MESSAGE = encodeURIComponent('Hola 👋 Me comunico desde la página web de Dental Company. Me gustaría agendar una cita. ¿Podrían indicarme disponibilidad? 🦷')
 
 function StepBar({ step }: { step: number }) {

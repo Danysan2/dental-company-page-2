@@ -19,7 +19,7 @@ async function main() {
   await prisma.staff.upsert({
     where:  { email: 'doctora@olinky.com' },
     update: {},
-    create: { email: 'doctora@olinky.com', nombre: 'Dra. Valentina Ríos', password: hashedPassword, rol: 'doctora' },
+    create: { email: 'doctora@olinky.com', nombre: 'Dra. Cindy Ortiz', password: hashedPassword, rol: 'doctora' },
   })
 
   await prisma.staff.upsert({

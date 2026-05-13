@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
-import { useTheme } from '@/hooks/useTheme'
+// import { useTheme } from '@/hooks/useTheme'
 import './AdminShell.css'
 
 const navItems = [
@@ -70,7 +70,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const router   = useRouter()
   const pathname = usePathname()
   const [sideOpen, setSideOpen] = useState(false)
-  const { dark, toggle } = useTheme()
+  // const { dark, toggle } = useTheme()
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login')
@@ -104,6 +104,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </div>
           </div>
           <div className="admin-sidebar__top-right">
+            {/* theme toggle — en standby
             <button
               className="admin-theme-toggle"
               onClick={toggle}
@@ -112,6 +113,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             >
               {dark ? <SunIcon /> : <MoonIcon />}
             </button>
+            */}
             <span className="admin-sidebar__badge">
               {user.rol === 'doctora' ? 'Doctora' : 'Recepcionista'}
             </span>
@@ -139,7 +141,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               {(user.nombre ?? 'U')[0].toUpperCase()}
             </div>
             <div className="admin-sidebar__user-info">
-              <span className="admin-sidebar__user-name">{user.nombre ?? 'Staff'}</span>
+              <span className="admin-sidebar__user-name">
+                {user.rol === 'doctora' ? (user.nombre ?? 'Doctora') : 'Recepcionista'}
+              </span>
               <span className="admin-sidebar__user-role">{user.email ?? ''}</span>
             </div>
           </div>
@@ -172,6 +176,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <span style={{ fontFamily: 'var(--f-display)', fontSize: '0.95rem', color: 'var(--text)' }}>Dental Company</span>
           </div>
           <div className="admin-topbar__actions">
+            {/* theme toggle — en standby
             <button
               className="admin-theme-toggle"
               onClick={toggle}
@@ -180,6 +185,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             >
               {dark ? <SunIcon /> : <MoonIcon />}
             </button>
+            */}
             <button className="admin-topbar__logout-mobile" onClick={handleLogout}>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="18" height="18">
                 <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/>
