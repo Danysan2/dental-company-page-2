@@ -684,6 +684,7 @@ export default function AdminCitas() {
     const q = search.toLowerCase().trim()
     return citas
       .filter(a => {
+        if (a.estado === 'cancelada') return false
         if (timeFilter === 'today' && a.fecha !== todayStr) return false
         if (timeFilter === 'week' && a.fecha < weekStr) return false
         if (timeFilter === 'month' && a.fecha < monthStr) return false

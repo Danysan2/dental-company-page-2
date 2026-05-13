@@ -44,6 +44,7 @@ interface PhoneInputProps {
   disabled?: boolean
   maxLocalLength?: number
   id?: string
+  selectMinWidth?: string // ej: '80px' para el select del prefijo
 }
 
 export default function PhoneInput({
@@ -53,6 +54,7 @@ export default function PhoneInput({
   disabled,
   maxLocalLength = 12,
   id,
+  selectMinWidth = '50px',
 }: PhoneInputProps) {
   const fullDigits = value.replace(/\D/g, '')
   const detected   = splitPhone(fullDigits)
@@ -88,7 +90,7 @@ export default function PhoneInput({
         onChange={e => handlePrefix(e.target.value)}
         disabled={disabled}
         aria-label="Prefijo de país"
-        style={{ flex: '0 0 auto', minWidth: '50px', maxWidth: '50px', cursor: 'pointer' }}
+        style={{ flex: '0 0 auto', minWidth: selectMinWidth, maxWidth: selectMinWidth, cursor: 'pointer' }}
       >
         {SA_COUNTRIES.map(c => (
           <option key={c.code} value={c.code}>

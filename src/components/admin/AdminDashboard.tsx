@@ -413,8 +413,8 @@ export default function AdminDashboard() {
       <div className="chart-card" style={{ marginTop: '1.5rem' }}>
         <div className="chart-card__header">
           <div>
-            <p className="chart-card__title">Próximas citas</p>
-            <p className="chart-card__sub">Hoy y días siguientes</p>
+            <p className="chart-card__title">Citas de hoy</p>
+            <p className="chart-card__sub">Solo citas programadas para hoy</p>
           </div>
           <Link href="/admin/citas" className="btn btn-ghost" style={{ fontSize: '0.8rem', padding: '0.4rem 0.8rem' }}>
             Ver todas →

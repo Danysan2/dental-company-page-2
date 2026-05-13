@@ -22,6 +22,14 @@ export async function GET(req: NextRequest) {
     const estado    = searchParams.get('estado')
     const clienteId = searchParams.get('clienteId')
 
+    // Auto-completar citas programadas cuya fecha ya pasó
+    const todayDate = new Date()
+    todayDate.setHours(0, 0, 0, 0)
+    await prisma.cita.updateMany({
+      where: { estado: 'programada', fecha: { lt: todayDate } },
+      data:  { estado: 'completada' },
+    })
+
     const where: Record<string, unknown> = {}
     if (desde || hasta) {
       where.fecha = {

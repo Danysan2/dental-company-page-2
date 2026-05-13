@@ -8,12 +8,12 @@ import './Appointments.css'
 
 const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
 const MONTHS_ES = [
-  'Enero','Febrero','Marzo','Abril','Mayo','Junio',
-  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ]
 
 function toYMD(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
 // ── Mini Calendar ──────────────────────────────────────────
@@ -21,10 +21,10 @@ function CalendarPicker({ selectedDate, onSelect }: { selectedDate: string; onSe
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const [viewYear,  setViewYear]  = useState(today.getFullYear())
+  const [viewYear, setViewYear] = useState(today.getFullYear())
   const [viewMonth, setViewMonth] = useState(today.getMonth())
 
-  const firstDay    = new Date(viewYear, viewMonth, 1).getDay()
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay()
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate()
 
   const prevMonth = () => {
@@ -44,11 +44,11 @@ function CalendarPicker({ selectedDate, onSelect }: { selectedDate: string; onSe
     <div className="cal">
       <div className="cal__header">
         <button type="button" className="cal__nav" onClick={prevMonth} aria-label="Mes anterior">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
         </button>
         <span className="cal__title">{MONTHS_ES[viewMonth]} {viewYear}</span>
         <button type="button" className="cal__nav" onClick={nextMonth} aria-label="Mes siguiente">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
         </button>
       </div>
       <div className="cal__weekdays">
@@ -59,11 +59,11 @@ function CalendarPicker({ selectedDate, onSelect }: { selectedDate: string; onSe
           if (!day) return <div key={`e${i}`} />
           const date = new Date(viewYear, viewMonth, day)
           date.setHours(0, 0, 0, 0)
-          const ymd        = toYMD(date)
-          const isPast     = date < today
-          const isSunday   = date.getDay() === 0
+          const ymd = toYMD(date)
+          const isPast = date < today
+          const isSunday = date.getDay() === 0
           const isSelected = selectedDate === ymd
-          const disabled   = isPast || isSunday
+          const disabled = isPast || isSunday
 
           return (
             <button
@@ -106,7 +106,7 @@ function TimeSlotPicker({ selectedTime, onSelect, availableSlots }: {
   return (
     <div className="slots">
       {HORARIOS.map(hora => {
-        const available  = availableSlots.includes(hora)
+        const available = availableSlots.includes(hora)
         const isSelected = selectedTime === hora
         return (
           <button
@@ -126,7 +126,7 @@ function TimeSlotPicker({ selectedTime, onSelect, availableSlots }: {
 }
 
 // ── Step indicator ──────────────────────────────────────────
-const WA_PHONE   = '573216252325'
+const WA_PHONE = '573216252325'
 const WA_MESSAGE = encodeURIComponent('Hola 👋 Me comunico desde la página web de Dental Company. Me gustaría agendar una cita. ¿Podrían indicarme disponibilidad? 🦷')
 
 function StepBar({ step }: { step: number }) {
@@ -141,7 +141,7 @@ function StepBar({ step }: { step: number }) {
         <div key={i} className={`step-bar__item${step > i ? ' done' : ''}${step === i ? ' active' : ''}`}>
           <div className="step-bar__circle">
             {step > i ? (
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
             ) : i + 1}
           </div>
           <span className="step-bar__label">{label}</span>
@@ -161,16 +161,16 @@ const INITIAL_FORM = {
 }
 
 export default function CitasPublicClient() {
-  const [step,           setStep]           = useState(0)
-  const [form,           setForm]           = useState(INITIAL_FORM)
-  const [servError,      setServError]      = useState('')
+  const [step, setStep] = useState(0)
+  const [form, setForm] = useState(INITIAL_FORM)
+  const [servError, setServError] = useState('')
   const [availableSlots, setAvailableSlots] = useState<string[] | null>(null)
-  const [loading,        setLoading]        = useState(false)
-  const [success,        setSuccess]        = useState(false)
-  const [error,          setError]          = useState('')
-  const [fieldErrors,    setFieldErrors]    = useState<Record<string,string>>({})
-  const slotVersionRef  = useRef(0)
-  const submitInFlight  = useRef(false)
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const slotVersionRef = useRef(0)
+  const submitInFlight = useRef(false)
 
   // Auto-load "consulta general" service on mount
   useEffect(() => {
@@ -211,17 +211,17 @@ export default function CitasPublicClient() {
 
   const update = (field: string, value: string | number) => setForm(f => ({ ...f, [field]: value }))
 
-  const isNombreValid   = () => !validarNombre(form.nombre) && !!form.nombre.trim()
-  const isCedulaValid   = () => !!form.cedula.trim() && !validarCedula(form.cedula)
+  const isNombreValid = () => !validarNombre(form.nombre) && !!form.nombre.trim()
+  const isCedulaValid = () => !!form.cedula.trim() && !validarCedula(form.cedula)
   const isTelefonoValid = () => isPhoneComplete(form.telefono)
-  const isCorreoValid   = () => !validarCorreo(form.correo)
+  const isCorreoValid = () => !validarCorreo(form.correo)
 
   const validateStep0 = () => {
-    const errs: Record<string,string> = {}
-    if (!isNombreValid())   errs.nombre   = 'Nombre inválido (mínimo 2 letras)'
-    if (!isCedulaValid())   errs.cedula   = 'Cédula inválida (6–12 dígitos)'
+    const errs: Record<string, string> = {}
+    if (!isNombreValid()) errs.nombre = 'Nombre inválido (mínimo 2 letras)'
+    if (!isCedulaValid()) errs.cedula = 'Cédula inválida (6–12 dígitos)'
     if (!isTelefonoValid()) errs.telefono = 'Ingresa un número de teléfono válido'
-    if (!isCorreoValid())   errs.correo   = 'Correo inválido'
+    if (!isCorreoValid()) errs.correo = 'Correo inválido'
     return errs
   }
 
@@ -256,10 +256,10 @@ export default function CitasPublicClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nombre:   form.nombre.trim(),
-          cedula:   form.cedula.trim(),
+          nombre: form.nombre.trim(),
+          cedula: form.cedula.trim(),
           telefono: form.telefono.trim(),
-          correo:   form.correo.trim() || null,
+          correo: form.correo.trim() || null,
         }),
       })
       if (!clienteRes.ok) throw new Error('No se pudo registrar el paciente. Intenta de nuevo.')
@@ -270,12 +270,12 @@ export default function CitasPublicClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clienteId:  cliente.id,
+          clienteId: cliente.id,
           servicioId: form.servicio_id,
-          fecha:      form.fecha,
-          hora:       form.hora,
-          precio:     form.precio,
-          notas:      form.notas.trim() || null,
+          fecha: form.fecha,
+          hora: form.hora,
+          precio: form.precio,
+          notas: form.notas.trim() || null,
         }),
       })
       if (!citaRes.ok) {
@@ -319,7 +319,7 @@ export default function CitasPublicClient() {
           <div className="appt-success animate-fade-up">
             <div className="appt-success__icon">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <polyline points="20 6 9 17 4 12"/>
+                <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
             <h2>¡Cita registrada!</h2>
@@ -387,6 +387,7 @@ export default function CitasPublicClient() {
                     value={form.telefono}
                     onChange={v => update('telefono', v)}
                     placeholder="Ej: 3001234567"
+                    selectMinWidth="80px"
                   />
                   {fieldErrors.telefono && <span className="field-error">{fieldErrors.telefono}</span>}
                 </div>
@@ -440,14 +441,14 @@ export default function CitasPublicClient() {
               <p className="appt-step__sub">Revisa los datos antes de enviar.</p>
               <div className="summary">
                 {[
-                  { label: 'Nombre',   value: form.nombre },
-                  { label: 'Cédula',   value: form.cedula },
+                  { label: 'Nombre', value: form.nombre },
+                  { label: 'Cédula', value: form.cedula },
                   { label: 'Teléfono', value: form.telefono },
-                  { label: 'Correo',   value: form.correo || '—' },
+                  { label: 'Correo', value: form.correo || '—' },
                   { label: 'Servicio', value: form.servicio },
-                  { label: 'Fecha',    value: new Date(form.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
-                  { label: 'Hora',     value: form.hora },
-                  { label: 'Notas',    value: form.notas || '—' },
+                  { label: 'Fecha', value: new Date(form.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
+                  { label: 'Hora', value: form.hora },
+                  { label: 'Notas', value: form.notas || '—' },
                 ].map(({ label, value }) => (
                   <div key={label} className="summary__row">
                     <span className="summary__label">{label}</span>
@@ -463,7 +464,7 @@ export default function CitasPublicClient() {
           <div className="appt-nav">
             {step > 0 && (
               <button type="button" className="btn btn-ghost appt-nav__back" onClick={() => { setStep(s => s - 1); setError('') }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6" /></svg>
                 Atrás
               </button>
             )}
@@ -471,13 +472,13 @@ export default function CitasPublicClient() {
             {step < 3 ? (
               <button type="button" className="btn btn-primary" disabled={!canAdvance()} onClick={handleNext}>
                 Continuar
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 18 15 12 9 6" /></svg>
               </button>
             ) : (
               <button type="button" className="btn btn-primary" disabled={loading} onClick={handleSubmit}>
                 {loading ? 'Enviando…' : 'Confirmar cita'}
                 {!loading && (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
                 )}
               </button>
             )}
@@ -490,31 +491,27 @@ export default function CitasPublicClient() {
             <h3>Información importante</h3>
             <ul>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="20 6 9 17 4 12" /></svg>
                 Llega 10 minutos antes de tu cita.
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="20 6 9 17 4 12" /></svg>
                 Trae tu documento de identidad.
               </li>
               <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="20 6 9 17 4 12"/></svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="20 6 9 17 4 12" /></svg>
                 Para cancelar, contáctanos mínimo 24 horas antes.
-              </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><polyline points="20 6 9 17 4 12"/></svg>
-                Te llamaremos para confirmar tu cita.
               </li>
             </ul>
           </div>
 
           <div className="appt-info__card appt-info__wa">
             <svg width="28" height="28" viewBox="0 0 24 24" fill="#25D366">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
             </svg>
             <div>
               <p className="appt-info__wa-title">¿Prefieres por WhatsApp?</p>
-              <p>Nuestro chatbot también puede ayudarte a agendar tu cita.</p>
+              <p>Si quieres cancelar, consultar o modificar tu cita, hazlo por medio de WhatsApp.</p>
               <a href={`https://wa.me/${WA_PHONE}?text=${WA_MESSAGE}`} target="_blank" rel="noreferrer" className="btn btn-outline" style={{ marginTop: '0.75rem', fontSize: '0.8rem' }}>
                 Escribir ahora
               </a>

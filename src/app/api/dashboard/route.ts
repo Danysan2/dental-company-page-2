@@ -49,15 +49,15 @@ export async function GET() {
 
       prisma.cita.findMany({
         where: {
-          fecha:  { gte: new Date(todayStr) },
-          estado: { not: 'cancelada' },
+          fecha:  new Date(todayStr),
+          estado: 'programada',
         },
         include: {
           cliente:  { select: { nombre: true } },
           servicio: { select: { nombre: true } },
         },
-        orderBy: [{ fecha: 'asc' }, { hora: 'asc' }],
-        take: 6,
+        orderBy: { hora: 'asc' },
+        take: 10,
       }),
 
       prisma.cita.groupBy({

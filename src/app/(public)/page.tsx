@@ -121,7 +121,7 @@ export default function Home() {
           <div className="hero__panel">
             <div className="hero__panel-bg" aria-hidden="true" />
             <img
-              src="/doctora2.png"
+              src="/IMAGEN HERO.png"
               alt="Dra. Cindy Ortiz"
               className="hero__doctor"
             />
@@ -152,10 +152,6 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="hero__scroll-cue" aria-hidden="true">
-          <span className="hero__scroll-line" />
-          <span className="hero__scroll-txt">scroll</span>
-        </div>
       </section>
 
       {/* ══════════════════════════════════════════

@@ -50,6 +50,8 @@
   align-items: center;
   padding-top: 5rem;
   padding-bottom: 5rem;
+  margin: 0 auto;
+  max-width: 1200px;
 }
 
 /* Copy side */
