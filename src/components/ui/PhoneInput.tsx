@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import './PhoneInput.css'
 
 export const SA_COUNTRIES = [
   { code: '54',  flag: '🇦🇷', name: 'Argentina'  },
@@ -31,18 +30,7 @@ export function splitPhone(digits: string): { prefix: string; local: string } {
   return { prefix: '57', local: digits }
 }
 
-/** Normaliza un teléfono al formato internacional de Sheets ("57XXXXXXXXXX").
- *  Maneja números legados de 10 dígitos colombianos y números ya normalizados. */
-export function normalizeIntlPhone(phone: string): string {
-  const digits = phone.replace(/\D/g, '')
-  if (!digits) return ''
-  // Si ya tiene código de país (> 10 dígitos), usarlo tal cual
-  if (digits.length > 10) return digits
-  // Número colombiano de 10 dígitos (legacy o entrada sin prefijo) → agregar 57
-  return '57' + digits
-}
-
-/** Devuelve true si el teléfono almacenado (con código de país) es válido */
+/** Devuelve true si el número (con código de país incluido) tiene suficientes dígitos */
 export function isPhoneComplete(phone: string): boolean {
   return phone.replace(/\D/g, '').length >= 9
 }
@@ -56,7 +44,6 @@ interface PhoneInputProps {
   disabled?: boolean
   maxLocalLength?: number
   id?: string
-  className?: string
 }
 
 export default function PhoneInput({
@@ -66,14 +53,13 @@ export default function PhoneInput({
   disabled,
   maxLocalLength = 12,
   id,
-  className = '',
 }: PhoneInputProps) {
   const fullDigits = value.replace(/\D/g, '')
   const detected   = splitPhone(fullDigits)
 
   const [prefix, setPrefix] = useState(detected.prefix)
 
-  // Sincronizar prefijo si el padre cambia el valor (ej: reset del formulario a '' no cambia prefijo)
+  // Sincronizar prefijo si el padre cambia el valor externamente (ej: cargar cliente existente)
   useEffect(() => {
     const d = value.replace(/\D/g, '')
     if (!d) return
@@ -95,21 +81,18 @@ export default function PhoneInput({
     onChange(prefix + d)
   }
 
-  const selected = SA_COUNTRIES.find(c => c.code === prefix) ?? SA_COUNTRIES[4]
-
   return (
-    <div className={`phone-field ${className}`}>
+    <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
       <select
         value={prefix}
         onChange={e => handlePrefix(e.target.value)}
         disabled={disabled}
-        className="phone-field__prefix"
         aria-label="Prefijo de país"
-        title={`${selected.flag} +${selected.code} ${selected.name}`}
+        style={{ flex: '0 0 auto', minWidth: '150px', maxWidth: '170px', cursor: 'pointer' }}
       >
         {SA_COUNTRIES.map(c => (
           <option key={c.code} value={c.code}>
-            {c.flag}  +{c.code} — {c.name}
+            {c.flag}  +{c.code} {c.name}
           </option>
         ))}
       </select>
@@ -122,7 +105,7 @@ export default function PhoneInput({
         placeholder={placeholder}
         disabled={disabled}
         maxLength={maxLocalLength}
-        className="phone-field__local"
+        style={{ flex: 1, minWidth: 0 }}
       />
     </div>
   )
