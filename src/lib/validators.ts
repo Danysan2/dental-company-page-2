@@ -14,7 +14,8 @@ export function validarCedula(cedula: string): string | null {
 
 export function validarTelefono(telefono: string): string | null {
   if (!telefono?.trim()) return null // opcional
-  if (!/^[0-9+\-\s()]{7,15}$/.test(telefono.trim())) return 'Teléfono inválido'
+  const digits = telefono.replace(/\D/g, '')
+  if (digits.length < 7 || digits.length > 15) return 'Teléfono inválido'
   return null
 }
 

@@ -52,14 +52,19 @@ function formatFechaSheets(fecha: string): string {
 }
 
 /**
- * Normaliza un teléfono colombiano al formato que usa el chatbot en Sheets: "57XXXXXXXXXX".
- * El chatbot guarda y busca con código de país. El formulario web solo guarda 10 dígitos.
- * Sin esta normalización, el chatbot no encuentra las citas creadas desde la web.
+ * Normaliza un teléfono al formato internacional para Sheets ("CCXXXXXXXXXX", sin +).
+ * - Número ya con código de país (>10 dígitos): se usa tal cual
+ * - Número legacy de 10 dígitos colombiano (empieza con 3): se añade "57"
+ * - Otros números cortos (< 10 dígitos): se dejan tal cual para no asumir país
  */
 function normalizePhoneSheets(phone: string): string {
   const digits = phone.replace(/\D/g, '')
-  if (digits.length <= 10) return '57' + digits.slice(-10)
-  return digits // ya tiene código de país
+  if (!digits) return digits
+  // Ya tiene código de país
+  if (digits.length > 10) return digits
+  // Número colombiano legacy de 10 dígitos sin código de país
+  if (digits.length === 10) return '57' + digits
+  return digits
 }
 
 /** Calcula hora_fin sumando duracionMinutos a hora_inicio "HH:MM" */

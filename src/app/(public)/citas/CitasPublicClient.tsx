@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { HORARIOS } from '@/lib/helpers'
-import { validarNombre, validarCedula, validarTelefono, validarCorreo } from '@/lib/validators'
+import { validarNombre, validarCedula, validarCorreo } from '@/lib/validators'
+import PhoneInput, { isPhoneComplete } from '@/components/ui/PhoneInput'
 import './Appointments.css'
 
 const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -212,14 +213,14 @@ export default function CitasPublicClient() {
 
   const isNombreValid   = () => !validarNombre(form.nombre) && !!form.nombre.trim()
   const isCedulaValid   = () => !!form.cedula.trim() && !validarCedula(form.cedula)
-  const isTelefonoValid = () => !!form.telefono.trim() && !validarTelefono(form.telefono)
+  const isTelefonoValid = () => isPhoneComplete(form.telefono)
   const isCorreoValid   = () => !validarCorreo(form.correo)
 
   const validateStep0 = () => {
     const errs: Record<string,string> = {}
     if (!isNombreValid())   errs.nombre   = 'Nombre inválido (mínimo 2 letras)'
     if (!isCedulaValid())   errs.cedula   = 'Cédula inválida (6–12 dígitos)'
-    if (!isTelefonoValid()) errs.telefono = 'Teléfono inválido (10 dígitos)'
+    if (!isTelefonoValid()) errs.telefono = 'Ingresa un número de teléfono válido'
     if (!isCorreoValid())   errs.correo   = 'Correo inválido'
     return errs
   }
@@ -382,8 +383,11 @@ export default function CitasPublicClient() {
                 </div>
                 <div className="form-group">
                   <label>Teléfono / WhatsApp *</label>
-                  <input type="tel" placeholder="Ej: 3001234567" value={form.telefono} maxLength={10} inputMode="numeric"
-                    onChange={e => update('telefono', e.target.value.replace(/\D/g, ''))} />
+                  <PhoneInput
+                    value={form.telefono}
+                    onChange={v => update('telefono', v)}
+                    placeholder="Ej: 3001234567"
+                  />
                   {fieldErrors.telefono && <span className="field-error">{fieldErrors.telefono}</span>}
                 </div>
                 <div className="form-group">

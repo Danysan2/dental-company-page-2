@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useToast } from '@/context/ToastContext'
 import { ESTADOS, HORARIOS, today, startOfWeek, startOfMonth } from '@/lib/helpers'
+import PhoneInput, { isPhoneComplete } from '@/components/ui/PhoneInput'
 import './AdminCitas.css'
 
 /* ── Skeleton ── */
@@ -133,7 +134,7 @@ function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
 
   const handleCrear = async () => {
     if (crearFlight.current) return
-    if (!nuevoForm.nombre.trim() || !nuevoForm.cedula.trim() || !nuevoForm.telefono.trim()) {
+    if (!nuevoForm.nombre.trim() || !nuevoForm.cedula.trim() || !isPhoneComplete(nuevoForm.telefono)) {
       setErrNuevo('Nombre, cédula y teléfono son obligatorios.')
       return
     }
@@ -238,12 +239,10 @@ function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
             </div>
             <div className="form-group">
               <label>Teléfono *</label>
-              <input
+              <PhoneInput
                 value={nuevoForm.telefono}
-                maxLength={10}
-                inputMode="numeric"
-                placeholder="10 dígitos"
-                onChange={e => setNuevoForm(f => ({ ...f, telefono: e.target.value.replace(/\D/g, '') }))}
+                onChange={v => setNuevoForm(f => ({ ...f, telefono: v }))}
+                placeholder="Ej: 3001234567"
               />
             </div>
             <div className="form-group">
