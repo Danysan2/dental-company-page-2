@@ -87,13 +87,13 @@ function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
   onClienteCreado: (c: Cliente) => void
 }) {
   const selectedClient = clients.find(c => c.id === value)
-  const [query,     setQuery]     = useState(selectedClient?.nombre ?? '')
-  const [open,      setOpen]      = useState(false)
-  const [creando,   setCreando]   = useState(false)
+  const [query, setQuery] = useState(selectedClient?.nombre ?? '')
+  const [open, setOpen] = useState(false)
+  const [creando, setCreando] = useState(false)
   const [nuevoForm, setNuevoForm] = useState({ nombre: '', cedula: '', telefono: '', correo: '' })
-  const [saving,    setSaving]    = useState(false)
-  const [errNuevo,  setErrNuevo]  = useState('')
-  const wrapRef     = useRef<HTMLDivElement>(null)
+  const [saving, setSaving] = useState(false)
+  const [errNuevo, setErrNuevo] = useState('')
+  const wrapRef = useRef<HTMLDivElement>(null)
   const crearFlight = useRef(false)
 
   useEffect(() => {
@@ -106,9 +106,9 @@ function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
 
   const filtered = query.trim().length >= 1
     ? clients.filter(c =>
-        c.nombre?.toLowerCase().includes(query.toLowerCase()) ||
-        c.cedula?.includes(query.trim())
-      ).slice(0, 8)
+      c.nombre?.toLowerCase().includes(query.toLowerCase()) ||
+      c.cedula?.includes(query.trim())
+    ).slice(0, 8)
     : []
 
   const select = (client: Cliente) => {
@@ -146,15 +146,15 @@ function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          nombre:   nuevoForm.nombre.trim(),
-          cedula:   nuevoForm.cedula.trim(),
+          nombre: nuevoForm.nombre.trim(),
+          cedula: nuevoForm.cedula.trim(),
           telefono: nuevoForm.telefono.trim(),
-          correo:   nuevoForm.correo.trim() || null,
+          correo: nuevoForm.correo.trim() || null,
         }),
       })
       if (!res.ok) {
         const err = await res.json().catch(() => ({}))
-        throw new Error(err.error ?? 'Error al crear el paciente.')
+        throw new Error(err.error ?? 'Error al crear el paciente. ')
       }
       const nuevo = await res.json()
       onClienteCreado(nuevo)
@@ -171,7 +171,7 @@ function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
     <div ref={wrapRef} style={{ position: 'relative' }}>
       <div className="cliente-search-wrap">
         <svg className="cliente-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <input
           type="text"
@@ -204,7 +204,7 @@ function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
           )}
           <button className="cliente-option cliente-option--new" onMouseDown={iniciarCreacion}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+              <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
             </svg>
             Crear nuevo paciente{query.trim() ? ` "${query.trim()}"` : ''}
           </button>
@@ -297,13 +297,13 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
   onSaved: (mode: 'new' | 'edit', form: CitaForm) => Promise<void>
   onClienteCreado: (c: Cliente) => void
 }) {
-  const [form,      setForm]      = useState<CitaForm>(cita ?? EMPTY_FORM)
+  const [form, setForm] = useState<CitaForm>(cita ?? EMPTY_FORM)
   const [horasDisp, setHorasDisp] = useState<string[]>(HORARIOS)
   const [loadHoras, setLoadHoras] = useState(false)
-  const [saving,    setSaving]    = useState(false)
-  const [err,       setErr]       = useState('')
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState('')
   const slotVersionRef = useRef(0)
-  const saveFlight     = useRef(false)
+  const saveFlight = useRef(false)
 
   useEscapeKey(onClose)
 
@@ -314,8 +314,8 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
     setForm(f => ({
       ...f,
       servicio_id: svcId,
-      servicio:    svc?.nombre ?? '',
-      precio:      svc?.precio ?? f.precio,
+      servicio: svc?.nombre ?? '',
+      precio: svc?.precio ?? f.precio,
     }))
   }
 
@@ -463,13 +463,13 @@ function ReagendarModal({ cita, onClose, onSaved }: {
   onClose: () => void
   onSaved: (id: string, fecha: string, hora: string) => Promise<void>
 }) {
-  const [fecha,     setFecha]     = useState(cita.fecha)
-  const [hora,      setHora]      = useState('')
+  const [fecha, setFecha] = useState(cita.fecha)
+  const [hora, setHora] = useState('')
   const [horasDisp, setHorasDisp] = useState<string[]>(HORARIOS)
   const [loadHoras, setLoadHoras] = useState(false)
-  const [saving,    setSaving]    = useState(false)
-  const [err,       setErr]       = useState('')
-  const slotVersionRef  = useRef(0)
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState('')
+  const slotVersionRef = useRef(0)
   const confirmarFlight = useRef(false)
 
   useEscapeKey(onClose)
@@ -564,9 +564,9 @@ function CancelConfirm({ cita, onClose, onConfirmed }: {
   onClose: () => void
   onConfirmed: (id: string) => Promise<void>
 }) {
-  const [saving, setSaving]  = useState(false)
-  const [err,    setErr]     = useState('')
-  const cancelFlight         = useRef(false)
+  const [saving, setSaving] = useState(false)
+  const [err, setErr] = useState('')
+  const cancelFlight = useRef(false)
   useEscapeKey(onClose)
 
   const confirmar = async () => {
@@ -629,34 +629,34 @@ function CancelConfirm({ cita, onClose, onConfirmed }: {
 
 /* ── Componente principal ── */
 const FILTER_OPTIONS = [
-  { key: 'all',   label: 'Todas' },
+  { key: 'all', label: 'Todas' },
   { key: 'today', label: 'Hoy' },
-  { key: 'week',  label: 'Esta semana' },
+  { key: 'week', label: 'Esta semana' },
   { key: 'month', label: 'Este mes' },
 ]
 
 export default function AdminCitas() {
   const { toast } = useToast()
 
-  const [citas,     setCitas]     = useState<Cita[]>([])
-  const [clientes,  setClientes]  = useState<Cliente[]>([])
+  const [citas, setCitas] = useState<Cita[]>([])
+  const [clientes, setClientes] = useState<Cliente[]>([])
   const [servicios, setServicios] = useState<Servicio[]>([])
-  const [loading,   setLoading]   = useState(true)
-  const [loadErr,   setLoadErr]   = useState('')
+  const [loading, setLoading] = useState(true)
+  const [loadErr, setLoadErr] = useState('')
 
-  const [timeFilter,   setTimeFilter]   = useState('all')
+  const [timeFilter, setTimeFilter] = useState('all')
   const [estadoFilter, setEstadoFilter] = useState('')
-  const [search,       setSearch]       = useState('')
-  const [sortKey,      setSortKey]      = useState('fecha')
-  const [sortDir,      setSortDir]      = useState<'asc' | 'desc'>('asc')
-  const [page,         setPage]         = useState(1)
+  const [search, setSearch] = useState('')
+  const [sortKey, setSortKey] = useState('fecha')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc')
+  const [page, setPage] = useState(1)
   const PAGE = 12
 
-  const [modal,    setModal]    = useState<string | null>(null)
+  const [modal, setModal] = useState<string | null>(null)
   const [selected, setSelected] = useState<Cita | null>(null)
 
-  const todayStr = useMemo(() => today(),        [])
-  const weekStr  = useMemo(() => startOfWeek(),  [])
+  const todayStr = useMemo(() => today(), [])
+  const weekStr = useMemo(() => startOfWeek(), [])
   const monthStr = useMemo(() => startOfMonth(), [])
 
   /* ── Cargar datos ── */
@@ -685,9 +685,9 @@ export default function AdminCitas() {
     return citas
       .filter(a => {
         if (timeFilter === 'today' && a.fecha !== todayStr) return false
-        if (timeFilter === 'week'  && a.fecha < weekStr)   return false
-        if (timeFilter === 'month' && a.fecha < monthStr)  return false
-        if (estadoFilter && a.estado !== estadoFilter)     return false
+        if (timeFilter === 'week' && a.fecha < weekStr) return false
+        if (timeFilter === 'month' && a.fecha < monthStr) return false
+        if (estadoFilter && a.estado !== estadoFilter) return false
         if (q && ![a.cliente_nombre, a.cliente_cedula, a.cliente_telefono, a.servicio, a.estado]
           .some(v => v?.toLowerCase().includes(q))) return false
         return true
@@ -702,9 +702,9 @@ export default function AdminCitas() {
   }, [citas, timeFilter, estadoFilter, search, sortKey, sortDir, todayStr, weekStr, monthStr])
 
   const counts = useMemo(() => ({
-    all:   citas.length,
+    all: citas.length,
     today: citas.filter(a => a.fecha === todayStr).length,
-    week:  citas.filter(a => a.fecha >= weekStr).length,
+    week: citas.filter(a => a.fecha >= weekStr).length,
     month: citas.filter(a => a.fecha >= monthStr).length,
   }), [citas, todayStr, weekStr, monthStr])
 
@@ -730,13 +730,13 @@ export default function AdminCitas() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clienteId:  form.cliente_id,
+          clienteId: form.cliente_id,
           servicioId: form.servicio_id,
-          precio:     form.precio,
-          fecha:      form.fecha,
-          hora:       form.hora,
-          estado:     form.estado,
-          notas:      form.notas || null,
+          precio: form.precio,
+          fecha: form.fecha,
+          hora: form.hora,
+          estado: form.estado,
+          notas: form.notas || null,
         }),
       })
       if (!res.ok) {
@@ -750,13 +750,13 @@ export default function AdminCitas() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clienteId:  form.cliente_id,
+          clienteId: form.cliente_id,
           servicioId: form.servicio_id,
-          precio:     form.precio,
-          fecha:      form.fecha,
-          hora:       form.hora,
-          estado:     form.estado,
-          notas:      form.notas || null,
+          precio: form.precio,
+          fecha: form.fecha,
+          hora: form.hora,
+          estado: form.estado,
+          notas: form.notas || null,
         }),
       })
       if (!res.ok) {
@@ -797,8 +797,8 @@ export default function AdminCitas() {
   }, [])
 
   const openEdit = useCallback((appt: Cita) => { setSelected(appt); setModal('edit') }, [])
-  const openRe   = useCallback((appt: Cita) => { setSelected(appt); setModal('reagendar') }, [])
-  const openCan  = useCallback((appt: Cita) => { setSelected(appt); setModal('cancel') }, [])
+  const openRe = useCallback((appt: Cita) => { setSelected(appt); setModal('reagendar') }, [])
+  const openCan = useCallback((appt: Cita) => { setSelected(appt); setModal('cancel') }, [])
 
   /* ── Render ── */
   return (
@@ -948,8 +948,8 @@ export default function AdminCitas() {
                       key={appt.id}
                       className={
                         appt.estado === 'cancelada' ? 'row-cancelled'
-                        : appt.fecha === todayStr   ? 'row-today'
-                        : ''
+                          : appt.fecha === todayStr ? 'row-today'
+                            : ''
                       }
                     >
                       <td>
@@ -982,8 +982,8 @@ export default function AdminCitas() {
                             title="Editar"
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/>
-                              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                             </svg>
                           </button>
                           <button
@@ -993,8 +993,8 @@ export default function AdminCitas() {
                             title="Reagendar"
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                              <polyline points="1 4 1 10 7 10"/>
-                              <path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+                              <polyline points="1 4 1 10 7 10" />
+                              <path d="M3.51 15a9 9 0 102.13-9.36L1 10" />
                             </svg>
                           </button>
                           <button
@@ -1004,9 +1004,9 @@ export default function AdminCitas() {
                             title="Cancelar"
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
-                              <circle cx="12" cy="12" r="10"/>
-                              <line x1="15" y1="9" x2="9" y2="15"/>
-                              <line x1="9" y1="9" x2="15" y2="15"/>
+                              <circle cx="12" cy="12" r="10" />
+                              <line x1="15" y1="9" x2="9" y2="15" />
+                              <line x1="9" y1="9" x2="15" y2="15" />
                             </svg>
                           </button>
                         </div>
@@ -1047,14 +1047,14 @@ export default function AdminCitas() {
         <CitaModal
           mode="edit"
           cita={{
-            cliente_id:  selected.cliente_id,
+            cliente_id: selected.cliente_id,
             servicio_id: selected.servicio_id,
-            servicio:    selected.servicio,
-            precio:      selected.precio,
-            fecha:       selected.fecha,
-            hora:        selected.hora?.slice(0, 5),
-            estado:      selected.estado,
-            notas:       selected.notas ?? '',
+            servicio: selected.servicio,
+            precio: selected.precio,
+            fecha: selected.fecha,
+            hora: selected.hora?.slice(0, 5),
+            estado: selected.estado,
+            notas: selected.notas ?? '',
           }}
           clients={clientes} servicios={servicios}
           onClose={() => setModal(null)}
