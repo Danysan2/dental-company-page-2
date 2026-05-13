@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { formatCOP } from '@/lib/helpers'
+import PhoneInput, { isPhoneComplete } from '@/components/ui/PhoneInput'
 import './AdminClientes.css'
 
 /* ── Skeleton ── */
@@ -85,8 +86,7 @@ function ClienteModal({ cliente, onClose, onSaved }: {
     if (form.nombre.trim().length < 3)                    e.nombre   = 'Mínimo 3 caracteres.'
     if (!form.cedula.trim())                              e.cedula   = 'La cédula es obligatoria.'
     if (!/^\d{6,12}$/.test(form.cedula.trim()))           e.cedula   = 'Solo números, 6-12 dígitos.'
-    if (!form.telefono.trim())                            e.telefono = 'El teléfono es obligatorio.'
-    if (!/^\d{10}$/.test(form.telefono.trim()))           e.telefono = '10 dígitos numéricos.'
+    if (!isPhoneComplete(form.telefono))                   e.telefono = 'Ingresa un número válido con prefijo.'
     if (form.correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.correo))
                                                           e.correo   = 'Formato de correo inválido.'
     setErrors(e)
@@ -160,10 +160,45 @@ function ClienteModal({ cliente, onClose, onSaved }: {
 
         <form onSubmit={handleSubmit} noValidate style={{ padding: '0 1.5rem 1.5rem' }}>
           {([
-            { key: 'nombre',   label: 'Nombre completo *', type: 'text',  ph: 'Ana Gómez' },
-            { key: 'cedula',   label: 'Cédula *',          type: 'text',  ph: '1012345678' },
-            { key: 'telefono', label: 'Teléfono *',        type: 'text',  ph: '3001234567' },
-            { key: 'correo',   label: 'Correo electrónico',type: 'email', ph: 'ana@gmail.com' },
+            { key: 'nombre', label: 'Nombre completo *', type: 'text',  ph: 'Ana Gómez' },
+            { key: 'cedula', label: 'Cédula *',          type: 'text',  ph: '1012345678' },
+          ] as const).map(({ key, label, type, ph }) => (
+            <div className="form-group" key={key} style={{ marginBottom: '0.9rem' }}>
+              <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-2)' }}>{label}</label>
+              <input
+                type={type}
+                placeholder={ph}
+                value={form[key]}
+                onChange={e => set(key, e.target.value)}
+                style={{
+                  width: '100%', padding: '0.55rem 0.75rem',
+                  border: `1.5px solid ${errors[key] ? '#c62828' : 'var(--c-warm-2)'}`,
+                  borderRadius: 8, fontSize: '0.88rem', outline: 'none',
+                  background: 'var(--c-bg)',
+                  color: 'var(--c-dark)',
+                }}
+              />
+              {errors[key] && (
+                <span style={{ fontSize: '0.75rem', color: '#c62828' }}>{errors[key]}</span>
+              )}
+            </div>
+          ))}
+
+          {/* Teléfono con selector de prefijo */}
+          <div className="form-group" style={{ marginBottom: '0.9rem' }}>
+            <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-2)' }}>Teléfono *</label>
+            <PhoneInput
+              value={form.telefono}
+              onChange={v => set('telefono', v)}
+              placeholder="3001234567"
+            />
+            {errors.telefono && (
+              <span style={{ fontSize: '0.75rem', color: '#c62828' }}>{errors.telefono}</span>
+            )}
+          </div>
+
+          {([
+            { key: 'correo', label: 'Correo electrónico', type: 'email', ph: 'ana@gmail.com' },
           ] as const).map(({ key, label, type, ph }) => (
             <div className="form-group" key={key} style={{ marginBottom: '0.9rem' }}>
               <label style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-2)' }}>{label}</label>

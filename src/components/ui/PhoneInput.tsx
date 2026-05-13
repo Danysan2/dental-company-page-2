@@ -88,7 +88,7 @@ export default function PhoneInput({
         onChange={e => handlePrefix(e.target.value)}
         disabled={disabled}
         aria-label="Prefijo de país"
-        style={{ flex: '0 0 auto', minWidth: '80px', maxWidth: '110px', cursor: 'pointer' }}
+        style={{ flex: '0 0 auto', minWidth: '50px', maxWidth: '50px', cursor: 'pointer' }}
       >
         {SA_COUNTRIES.map(c => (
           <option key={c.code} value={c.code}>
