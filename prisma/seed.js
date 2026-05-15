@@ -16,25 +16,25 @@ async function main() {
   })
 
   await prisma.staff.upsert({
-    where: { email: 'recepcion@olinky.com' },
+    where: { email: 'recepcion@dentalcompany.com' },
     update: {},
-    create: { email: 'recepcion@olinky.com', nombre: 'Andrea Molina', password: hashedPassword, rol: 'recepcionista' },
+    create: { email: 'recepcion@dentalcompany.com', nombre: 'Recepción', password: hashedPassword, rol: 'recepcionista' },
   })
 
   console.log('✓ Staff')
 
   // ── Servicios ────────────────────────────────────────────────
   const serviciosData = [
-    { nombre: 'Consulta General',        precio: 80000,   duracion: 30,  descripcion: 'Revisión odontológica general' },
-    { nombre: 'Limpieza Dental',          precio: 120000,  duracion: 60,  descripcion: 'Profilaxis y limpieza profesional' },
-    { nombre: 'Blanqueamiento Dental',    precio: 350000,  duracion: 90,  descripcion: 'Blanqueamiento dental profesional' },
-    { nombre: 'Ortodoncia - Consulta',    precio: 80000,   duracion: 30,  descripcion: 'Consulta de valoración ortodoncia' },
-    { nombre: 'Extracción Simple',        precio: 150000,  duracion: 45,  descripcion: 'Extracción dental simple' },
-    { nombre: 'Extracción Molar Juicio',  precio: 350000,  duracion: 90,  descripcion: 'Extracción molar del juicio' },
-    { nombre: 'Resina (obturación)',      precio: 180000,  duracion: 60,  descripcion: 'Restauración con resina compuesta' },
-    { nombre: 'Endodoncia',               precio: 450000,  duracion: 120, descripcion: 'Tratamiento de conducto' },
-    { nombre: 'Corona Dental',            precio: 800000,  duracion: 60,  descripcion: 'Corona cerámica o zirconio' },
-    { nombre: 'Implante Dental',          precio: 2500000, duracion: 120, descripcion: 'Implante de titanio + corona' },
+    { nombre: 'Consulta General', precio: 80000, duracion: 30, descripcion: 'Revisión odontológica general' },
+    { nombre: 'Limpieza Dental', precio: 120000, duracion: 60, descripcion: 'Profilaxis y limpieza profesional' },
+    { nombre: 'Blanqueamiento Dental', precio: 350000, duracion: 90, descripcion: 'Blanqueamiento dental profesional' },
+    { nombre: 'Ortodoncia - Consulta', precio: 80000, duracion: 30, descripcion: 'Consulta de valoración ortodoncia' },
+    { nombre: 'Extracción Simple', precio: 150000, duracion: 45, descripcion: 'Extracción dental simple' },
+    { nombre: 'Extracción Molar Juicio', precio: 350000, duracion: 90, descripcion: 'Extracción molar del juicio' },
+    { nombre: 'Resina (obturación)', precio: 180000, duracion: 60, descripcion: 'Restauración con resina compuesta' },
+    { nombre: 'Endodoncia', precio: 450000, duracion: 120, descripcion: 'Tratamiento de conducto' },
+    { nombre: 'Corona Dental', precio: 800000, duracion: 60, descripcion: 'Corona cerámica o zirconio' },
+    { nombre: 'Implante Dental', precio: 2500000, duracion: 120, descripcion: 'Implante de titanio + corona' },
   ]
 
   for (const s of serviciosData) {
@@ -44,7 +44,7 @@ async function main() {
   console.log('✓ Servicios')
   console.log('\n✅ Seed completo!')
   console.log('   Doctora  — doctora@dentalcompany.com  / Cindy2026!')
-  console.log('   Recepción — recepcion@olinky.com       / Cindy2026!')
+  console.log('   Recepción — recepcion@dentalcompany.com       / Cindy2026!')
 }
 
 main()
