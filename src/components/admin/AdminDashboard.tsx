@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { formatCOP, today } from '@/lib/helpers'
 import Skeleton from '@/components/ui/Skeleton'
+import { useAuth } from '@/context/AuthContext'
 import './AdminDashboard.css'
 
 /* ── SVG Bar Chart ── */
@@ -155,6 +156,8 @@ interface DashboardData {
 /* ── Main Dashboard ── */
 export default function AdminDashboard() {
   const todayStr = today()
+  const { user } = useAuth()
+  const esDoctora = user?.rol === 'doctora'
 
   const [data,    setData]    = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -283,6 +286,7 @@ export default function AdminDashboard() {
               <span className="kpi-card__trend kpi-card__trend--up">↑ activos</span>
             </div>
 
+            {esDoctora && (
             <div className="kpi-card">
               <div className="kpi-card__icon kpi-card__icon--green">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -296,6 +300,7 @@ export default function AdminDashboard() {
               </div>
               <span className="kpi-card__trend kpi-card__trend--up">↑ completadas</span>
             </div>
+            )}
 
             <div className="kpi-card">
               <div className="kpi-card__icon kpi-card__icon--amber">
@@ -361,8 +366,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* ── Revenue bars + services ── */}
-      <div className="dash-charts-row" style={{ marginTop: '1.5rem' }}>
+      {/* ── Revenue bars + services — solo doctora ── */}
+      {esDoctora && <div className="dash-charts-row" style={{ marginTop: '1.5rem' }}>
         <div className="chart-card dash-charts-row__main">
           <div className="chart-card__header">
             <div>
@@ -407,7 +412,7 @@ export default function AdminDashboard() {
           </div>
           {loading ? <ChartSkeleton height={140} /> : <DonutChart slices={servicioData} />}
         </div>
-      </div>
+      </div>}
 
       {/* ── Próximas citas ── */}
       <div className="chart-card" style={{ marginTop: '1.5rem' }}>

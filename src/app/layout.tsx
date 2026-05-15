@@ -79,8 +79,8 @@ const jsonLd = {
   },
   geo: {
     '@type': 'GeoCoordinates',
-    latitude: 7.0869,
-    longitude: -70.7311,
+    latitude: 7.083995127054471,
+    longitude: -70.75922824785866,
   },
   openingHoursSpecification: [
     {
@@ -127,8 +127,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
         <meta name="geo.region" content="CO-ARA" />
         <meta name="geo.placename" content="Arauca, Colombia" />
-        <meta name="geo.position" content="7.0869;-70.7311" />
-        <meta name="ICBM" content="7.0869, -70.7311" />
+        <meta name="geo.position" content="7.083995127054471;-70.75922824785866" />
+        <meta name="ICBM" content="7.083995127054471, -70.75922824785866" />
       </head>
       <body>
         {children}

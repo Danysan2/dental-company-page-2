@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { formatCOP } from '@/lib/helpers'
 import PhoneInput, { isPhoneComplete } from '@/components/ui/PhoneInput'
+import { useAuth } from '@/context/AuthContext'
 import './AdminClientes.css'
 
 /* ── Skeleton ── */
@@ -359,10 +360,12 @@ function ClienteDrawer({ client, onClose, onEdit }: {
               <span className="drawer-stat__label">Canceladas</span>
             </div>
           </div>
+          {esDoctora && (
           <div className="drawer-ingresos">
             <span className="drawer-ingresos__label">Ingresos generados</span>
             <span className="drawer-ingresos__val">{formatCOP(client.ingresos_generados ?? 0)}</span>
           </div>
+          )}
         </div>
 
         {proxima && (
@@ -426,6 +429,9 @@ function ClienteDrawer({ client, onClose, onEdit }: {
 
 /* ── Componente principal ── */
 export default function AdminClientes() {
+  const { user } = useAuth()
+  const esDoctora = user?.rol === 'doctora'
+
   const [clientes,     setClientes]     = useState<Cliente[]>([])
   const [loading,      setLoading]      = useState(true)
   const [error,        setError]        = useState('')
@@ -511,10 +517,12 @@ export default function AdminClientes() {
           <span className="clientes-kpi__val">{loading ? '…' : kpiCitas}</span>
           <span className="clientes-kpi__label">Citas totales</span>
         </div>
+        {esDoctora && (
         <div className="clientes-kpi">
           <span className="clientes-kpi__val">{loading ? '…' : formatCOP(kpiIngresos)}</span>
           <span className="clientes-kpi__label">Ingresos totales</span>
         </div>
+        )}
       </div>
 
       {/* Búsqueda */}
@@ -605,9 +613,11 @@ export default function AdminClientes() {
                   <th className="th-s" onClick={() => toggleSort('citas')}>
                     Citas <SortIcon col="citas" />
                   </th>
+                  {esDoctora && (
                   <th className="th-s" onClick={() => toggleSort('ingresos')}>
                     Ingresos <SortIcon col="ingresos" />
                   </th>
+                  )}
                   <th className="th-s" onClick={() => toggleSort('created_at')}>
                     Registro <SortIcon col="created_at" />
                   </th>
@@ -634,7 +644,7 @@ export default function AdminClientes() {
                         )}
                       </div>
                     </td>
-                    <td className="td-ingresos">{formatCOP(c.ingresos_generados ?? 0)}</td>
+                    {esDoctora && <td className="td-ingresos">{formatCOP(c.ingresos_generados ?? 0)}</td>}
                     <td className="td-mono">{fmtDate(c.created_at)}</td>
                     <td className="th-center">
                       <button
