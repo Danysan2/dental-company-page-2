@@ -10,6 +10,8 @@ export async function GET() {
   try {
     const auth = await requireSession()
     if (auth instanceof NextResponse) return auth
+    const { session } = auth
+    const esDoctora = session.rol === 'doctora'
 
     const todayStr    = today()
     const monthStart  = startOfMonth()
@@ -106,7 +108,8 @@ export async function GET() {
       kpis: {
         total_clientes:      totalClientes,
         citas_este_mes:      citasMes,
-        ingresos_este_mes:   ingresosMesAgg._sum.precio ?? 0,
+        // Solo la doctora puede ver datos financieros
+        ingresos_este_mes:   esDoctora ? (ingresosMesAgg._sum.precio ?? 0) : null,
         canceladas_este_mes: canceladasMes,
       },
       proximas: proximasCitas.map(c => ({
@@ -126,11 +129,12 @@ export async function GET() {
         fecha:  c.fecha.toISOString().slice(0, 10),
         estado: c.estado,
       })),
-      citas_meses: citasUltimos6meses.map(c => ({
+      // Solo la doctora puede ver el gráfico de ingresos mensuales
+      citas_meses: esDoctora ? citasUltimos6meses.map(c => ({
         fecha:  c.fecha.toISOString().slice(0, 10),
         estado: c.estado,
         precio: c.precio ?? 0,
-      })),
+      })) : [],
     })
   } catch (err) {
     console.error('[GET /api/dashboard]', err)

@@ -6,8 +6,13 @@ import { getSession, requireSession } from '@/lib/auth'
 import { Unauthorized, BadRequest, ServerError } from '@/lib/apiErrors'
 import { validarFecha, validarHora, sanitizarTexto } from '@/lib/validators'
 import { agregarCitaSheets, actualizarCalendarEventId, crearEventoCalendar } from '@/lib/google'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 const VALID_ESTADOS = ['programada', 'completada', 'cancelada', 'no_asistio'] as const
+
+// Throttle del auto-complete: solo corre una vez por hora por instancia del servidor
+let lastAutoCompleteMs = 0
+const AUTO_COMPLETE_INTERVAL_MS = 60 * 60 * 1000 // 1 hora
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,13 +27,17 @@ export async function GET(req: NextRequest) {
     const estado    = searchParams.get('estado')
     const clienteId = searchParams.get('clienteId')
 
-    // Auto-completar citas programadas cuya fecha ya pasó
-    const todayDate = new Date()
-    todayDate.setHours(0, 0, 0, 0)
-    await prisma.cita.updateMany({
-      where: { estado: 'programada', fecha: { lt: todayDate } },
-      data:  { estado: 'completada' },
-    })
+    // Auto-completar citas programadas cuya fecha ya pasó (máximo una vez por hora)
+    const now = Date.now()
+    if (now - lastAutoCompleteMs > AUTO_COMPLETE_INTERVAL_MS) {
+      lastAutoCompleteMs = now
+      const todayDate = new Date()
+      todayDate.setHours(0, 0, 0, 0)
+      await prisma.cita.updateMany({
+        where: { estado: 'programada', fecha: { lt: todayDate } },
+        data:  { estado: 'completada' },
+      })
+    }
 
     const where: Record<string, unknown> = {}
     if (desde || hasta) {
@@ -88,10 +97,19 @@ export async function POST(req: NextRequest) {
     const errHora = validarHora(hora)
     if (errHora)     return BadRequest(errHora)
 
-    // Validate optional fields
-    const estadoFinal = estado ?? 'programada'
-    if (!VALID_ESTADOS.includes(estadoFinal)) return BadRequest('Estado inválido')
-    if (precio !== undefined && precio !== null && (typeof precio !== 'number' || precio < 0)) {
+    // Rate limit para reservas públicas: máx 15 por IP cada 15 min
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+    const session = await getSession()
+    if (!session && !checkRateLimit(`citas:${ip}`, 15, 15 * 60 * 1000)) {
+      return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en unos minutos.' }, { status: 429 })
+    }
+
+    // Si el usuario no está autenticado (reserva pública), forzar estado y precio seguros
+    const esStaff = !!session
+    const estadoFinal = esStaff ? (estado ?? 'programada') : 'programada'
+    if (esStaff && !VALID_ESTADOS.includes(estadoFinal)) return BadRequest('Estado inválido')
+    const precioFinal = esStaff ? (precio ?? null) : null
+    if (esStaff && precio !== undefined && precio !== null && (typeof precio !== 'number' || precio < 0)) {
       return BadRequest('Precio inválido')
     }
     const notasSanitizadas = notas ? sanitizarTexto(notas).slice(0, 500) : null
@@ -104,27 +122,38 @@ export async function POST(req: NextRequest) {
       return BadRequest('Ya tienes citas pendientes agendadas. Cancela una antes de agendar otra.')
     }
 
-    // Check availability
-    const conflict = await prisma.cita.findFirst({
-      where: { fecha: new Date(fecha), hora, estado: { not: 'cancelada' } },
-    })
-    if (conflict) return BadRequest('Ese horario ya está ocupado')
+    // Verificar disponibilidad y crear en una transacción atómica para evitar doble-booking
+    const fechaDate = new Date(fecha)
+    let cita
+    try {
+      cita = await prisma.$transaction(async (tx) => {
+        const conflict = await tx.cita.findFirst({
+          where: { fecha: fechaDate, hora, estado: { not: 'cancelada' } },
+        })
+        if (conflict) throw new Error('HORARIO_OCUPADO')
 
-    const cita = await prisma.cita.create({
-      data: {
-        clienteId,
-        servicioId,
-        fecha:  new Date(fecha),
-        hora,
-        notas:  notasSanitizadas,
-        precio: precio ?? null,
-        estado: estadoFinal,
-      },
-      include: {
-        cliente:  { select: { id: true, nombre: true, telefono: true, correo: true, cedula: true } },
-        servicio: { select: { id: true, nombre: true, precio: true, duracion: true } },
-      },
-    })
+        return tx.cita.create({
+          data: {
+            clienteId,
+            servicioId,
+            fecha:  fechaDate,
+            hora,
+            notas:  notasSanitizadas,
+            precio: precioFinal,
+            estado: estadoFinal,
+          },
+          include: {
+            cliente:  { select: { id: true, nombre: true, telefono: true, correo: true, cedula: true } },
+            servicio: { select: { id: true, nombre: true, precio: true, duracion: true } },
+          },
+        })
+      })
+    } catch (txErr) {
+      if ((txErr as Error).message === 'HORARIO_OCUPADO') {
+        return BadRequest('Ese horario ya está ocupado')
+      }
+      throw txErr
+    }
 
     // ── Sync con Google Sheets y Calendar (no bloquea si falla) ─────────────
     void (async () => {

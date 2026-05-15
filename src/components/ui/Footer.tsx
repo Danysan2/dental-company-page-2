@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import Link from 'next/link'
 import './Footer.css'
 
@@ -12,7 +13,7 @@ export default function Footer() {
       <div className="container footer__inner">
         <div className="footer__brand">
           <Link href="/" className="footer__logo">
-            <img src="/logo-png.png" alt="Dental Company" className="footer__logo-img" />
+            <Image src="/logo-png.png" alt="Dental Company" width={140} height={40} className="footer__logo-img" style={{ width: 'auto', height: '36px', objectFit: 'contain' }} />
             <span className="footer__logo-text">
               Dental <em>Company</em>
             </span>

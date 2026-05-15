@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
@@ -97,7 +98,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
       <aside className={`admin-sidebar ${sideOpen ? 'admin-sidebar--open' : ''}`}>
         <div className="admin-sidebar__top">
           <div className="admin-sidebar__logo">
-            <img src="/logo-png.png" alt="Dental Company" style={{ height: 30, width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
+            <Image src="/logo-png.png" alt="Dental Company" width={100} height={30} style={{ height: 30, width: 'auto', objectFit: 'contain', flexShrink: 0 }} />
             <div className="admin-sidebar__logo-text">
               <span>Dental</span>
               <em>Company</em>
@@ -172,7 +173,7 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             </svg>
           </button>
           <div className="admin-topbar__logo-mobile">
-            <img src="/logo-png.png" alt="Dental Company" style={{ height: 26, width: 'auto', objectFit: 'contain' }} />
+            <Image src="/logo-png.png" alt="Dental Company" width={80} height={26} style={{ height: 26, width: 'auto', objectFit: 'contain' }} />
             <span style={{ fontFamily: 'var(--f-display)', fontSize: '0.95rem', color: 'var(--text)' }}>Dental Company</span>
           </div>
           <div className="admin-topbar__actions">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import './Navbar.css'
@@ -21,7 +22,7 @@ export default function Navbar() {
       <div className="navbar__inner container">
         {/* Logo */}
         <Link href="/" className="navbar__logo" onClick={() => setMenuOpen(false)}>
-          <img src="/logo-png.png" alt="Dental Company" className="navbar__logo-img" />
+          <Image src="/logo-png.png" alt="Dental Company" width={140} height={40} className="navbar__logo-img" style={{ width: 'auto', height: '32px', objectFit: 'contain' }} />
           <span className="navbar__logo-text">
             Dental <em>Company</em>
           </span>

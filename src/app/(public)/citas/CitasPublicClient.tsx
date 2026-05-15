@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { HORARIOS } from '@/lib/helpers'
 import { validarNombre, validarCedula, validarCorreo } from '@/lib/validators'
 import PhoneInput, { isPhoneComplete } from '@/components/ui/PhoneInput'
+import { enviarCorreosCita } from '@/lib/emailService'
 import './Appointments.css'
 
 const DAYS_ES = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
@@ -284,6 +285,15 @@ export default function CitasPublicClient() {
       }
 
       setSuccess(true)
+      // Enviar correos de confirmación (no bloquea si falla)
+      void enviarCorreosCita({
+        nombrePaciente: form.nombre.trim(),
+        correo: form.correo.trim() || null,
+        telefono: form.telefono.trim(),
+        servicio: form.servicio,
+        fecha: form.fecha,
+        hora: form.hora,
+      })
     } catch (e: unknown) {
       const msg = (e as Error).message ?? ''
       if (msg.includes('horario') || msg.includes('ocupado')) {
@@ -404,6 +414,12 @@ export default function CitasPublicClient() {
                     value={form.notas} onChange={e => update('notas', e.target.value)} />
                 </div>
               </div>
+              <p style={{ fontSize: '0.78rem', color: '#888', marginTop: '1rem', lineHeight: 1.5 }}>
+                Al continuar, aceptas que Dental Company trate tus datos personales (nombre, cédula, teléfono y correo)
+                con el único propósito de gestionar tu cita, conforme a la{' '}
+                <strong>Ley 1581 de 2012</strong> de protección de datos personales de Colombia.
+                Puedes solicitar la eliminación de tus datos contactándonos por WhatsApp.
+              </p>
             </div>
           )}
 

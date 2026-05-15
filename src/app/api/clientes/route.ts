@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { getSession, requireSession } from '@/lib/auth'
 import { Unauthorized, BadRequest, ServerError } from '@/lib/apiErrors'
 import { validarNombre, validarCedula, validarTelefono, validarCorreo, sanitizarTexto } from '@/lib/validators'
+import { checkRateLimit } from '@/lib/rateLimit'
 
 export async function GET(req: NextRequest) {
   try {
@@ -71,6 +72,15 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limit para registros públicos: máx 15 por IP cada 15 min
+    const staffSession = await getSession()
+    if (!staffSession) {
+      const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
+      if (!checkRateLimit(`clientes:${ip}`, 15, 15 * 60 * 1000)) {
+        return NextResponse.json({ error: 'Demasiadas solicitudes. Intenta de nuevo en unos minutos.' }, { status: 429 })
+      }
+    }
+
     // Allow both authed staff and anonymous public booking
     const body = await req.json()
     const nombre = sanitizarTexto(body.nombre ?? '')
