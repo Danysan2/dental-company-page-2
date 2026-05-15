@@ -178,7 +178,7 @@ export default function CitasPublicClient() {
     fetch('/api/servicios')
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
       .then((data: Servicio[]) => {
-        const consulta = data.find(s => s.nombre.toLowerCase().includes('consulta'))
+        const consulta = (data ?? []).find(s => s.nombre.toLowerCase().includes('consulta'))
         if (consulta) {
           setForm(f => ({ ...f, servicio_id: consulta.id, servicio: consulta.nombre, precio: consulta.precio ?? 0 }))
         } else {

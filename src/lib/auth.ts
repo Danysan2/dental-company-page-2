@@ -2,9 +2,11 @@ import { SignJWT, jwtVerify } from 'jose'
 import { cookies }            from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 
-const SECRET = new TextEncoder().encode(
-  process.env.JWT_SECRET ?? 'fallback-secret-change-in-production'
-)
+if (!process.env.JWT_SECRET) {
+  throw new Error('JWT_SECRET environment variable is required. Set it in .env.local')
+}
+
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
 
 const COOKIE_NAME = 'dental_session'
 const COOKIE_MAX_AGE = 60 * 60 * 8 // 8 horas
