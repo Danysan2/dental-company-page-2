@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import { useToast } from '@/context/ToastContext'
 import { ESTADOS, HORARIOS, today, startOfWeek, startOfMonth } from '@/lib/helpers'
 import PhoneInput, { isPhoneComplete } from '@/components/ui/PhoneInput'
+import { enviarCorreosCita } from '@/lib/emailService'
 import './AdminCitas.css'
 
 /* ── Skeleton ── */
@@ -745,6 +746,19 @@ export default function AdminCitas() {
         throw new Error(err.error ?? 'Error al crear la cita.')
       }
       toast('Cita creada correctamente.', 'success')
+
+      // Enviar webhook n8n para correo de confirmación
+      const cliente = clientes.find(c => c.id === form.cliente_id)
+      if (cliente) {
+        void enviarCorreosCita({
+          nombrePaciente: cliente.nombre,
+          correo: cliente.correo || null,
+          telefono: cliente.telefono || null,
+          servicio: form.servicio,
+          fecha: form.fecha,
+          hora: form.hora,
+        })
+      }
     } else {
       if (!selected) return
       const res = await fetch(`/api/citas/${selected.id}`, {
@@ -767,7 +781,7 @@ export default function AdminCitas() {
       toast('Cita actualizada.', 'info')
     }
     cargar()
-  }, [selected, cargar, toast])
+  }, [selected, cargar, toast, clientes])
 
   const handleReagendar = useCallback(async (id: string, fecha: string, hora: string) => {
     const res = await fetch(`/api/citas/${id}`, {

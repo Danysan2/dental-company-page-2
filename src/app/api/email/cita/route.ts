@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const N8N_WEBHOOK = 'https://n8n-n8n.dtbfmw.easypanel.host/webhook-test/8b95d35b-4948-4a42-b93a-f59a0410595f'
+const N8N_WEBHOOK = 'https://n8n-n8n.dtbfmw.easypanel.host/webhook/8b95d35b-4948-4a42-b93a-f59a0410595f'
 
 export async function POST(req: NextRequest) {
   try {
