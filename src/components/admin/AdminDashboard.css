@@ -124,7 +124,7 @@
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  height: 120px;
+  height: 180px;
 }
 
 .revenue-bars__col {
@@ -262,7 +262,7 @@
   .upcoming-item__service { font-size: 0.7rem; }
   .upcoming-item__date    { font-size: 0.72rem; }
   .upcoming-item__hour    { font-size: 0.68rem; }
-  .revenue-bars { height: 90px; }
+  .revenue-bars { height: 140px; }
 }
 
 @media (max-width: 420px) {
