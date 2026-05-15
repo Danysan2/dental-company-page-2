@@ -264,10 +264,11 @@ function ClienteModal({ cliente, onClose, onSaved }: {
 }
 
 /* ── Drawer de detalle del cliente ── */
-function ClienteDrawer({ client, onClose, onEdit }: {
+function ClienteDrawer({ client, onClose, onEdit, esDoctora }: {
   client: Cliente
   onClose: () => void
   onEdit: () => void
+  esDoctora: boolean
 }) {
   const [historial,   setHistorial]   = useState<HistorialItem[]>([])
   const [loadingHist, setLoadingHist] = useState(true)
@@ -672,6 +673,7 @@ export default function AdminClientes() {
           client={selected}
           onClose={() => setSelected(null)}
           onEdit={() => { setModalCliente(selected); setSelected(null) }}
+          esDoctora={esDoctora}
         />
       )}
 
