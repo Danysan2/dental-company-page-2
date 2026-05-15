@@ -7,18 +7,19 @@ async function main() {
   console.log('Seeding database...')
 
   // ── Staff ────────────────────────────────────────────────────
-  const hashedPassword = await bcrypt.hash('Cindy2026!', 12)
+  const hashedDoctora    = await bcrypt.hash('Cindy2026!', 12)
+  const hashedRecepcion  = await bcrypt.hash('Reception2026!', 12)
 
   await prisma.staff.upsert({
     where: { email: 'doctora@dentalcompany.com' },
     update: {},
-    create: { email: 'doctora@dentalcompany.com', nombre: 'Dra. Cindy Ortiz', password: hashedPassword, rol: 'doctora' },
+    create: { email: 'doctora@dentalcompany.com', nombre: 'Dra. Cindy Ortiz', password: hashedDoctora, rol: 'doctora' },
   })
 
   await prisma.staff.upsert({
     where: { email: 'recepcion@dentalcompany.com' },
     update: {},
-    create: { email: 'recepcion@dentalcompany.com', nombre: 'Recepción', password: hashedPassword, rol: 'recepcionista' },
+    create: { email: 'recepcion@dentalcompany.com', nombre: 'Recepción', password: hashedRecepcion, rol: 'recepcionista' },
   })
 
   console.log('✓ Staff')
@@ -44,7 +45,7 @@ async function main() {
   console.log('✓ Servicios')
   console.log('\n✅ Seed completo!')
   console.log('   Doctora  — doctora@dentalcompany.com  / Cindy2026!')
-  console.log('   Recepción — recepcion@dentalcompany.com       / Cindy2026!')
+  console.log('   Recepción — recepcion@dentalcompany.com       / Reception2026!')
 }
 
 main()
