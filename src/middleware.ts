@@ -13,7 +13,7 @@ const API_PUBLIC   = [
 ]
 
 // POST-only public routes (public booking flow)
-const API_PUBLIC_POST = ['/api/clientes', '/api/citas']
+const API_PUBLIC_POST = ['/api/clientes', '/api/citas', '/api/email/cita']
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
