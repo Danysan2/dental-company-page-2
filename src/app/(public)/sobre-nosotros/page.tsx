@@ -22,13 +22,13 @@ export const metadata: Metadata = {
     siteName: 'Dental Company',
     locale: 'es_CO',
     type: 'website',
-    images: [{ url: '/og-home.png', width: 1200, height: 630, alt: 'Dra. Cindy Ortiz — Dental Company Arauca' }],
+    images: [{ url: '/logo-png.png', width: 1200, height: 630, alt: 'Dra. Cindy Ortiz — Dental Company Arauca' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Dra. Cindy Ortiz — Dental Company Arauca',
     description: 'Especialista en Rehabilitación Oral y Estética Dental en Arauca.',
-    images: ['/og-home.png'],
+    images: ['/logo-png.png'],
   },
   alternates: {
     canonical: 'https://www.dentalcompany.com.co/sobre-nosotros',

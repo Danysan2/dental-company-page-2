@@ -29,13 +29,13 @@ export const metadata: Metadata = {
     siteName: 'Dental Company',
     locale: 'es_CO',
     type: 'website',
-    images: [{ url: '/og-home.png', width: 1200, height: 630, alt: 'Dental Company — Clínica Odontológica Arauca' }],
+    images: [{ url: '/logo-png.png', width: 1200, height: 630, alt: 'Dental Company — Clínica Odontológica Arauca' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Dental Company — Clínica Odontológica en Arauca',
     description: 'Especialistas en Rehabilitación Oral y Estética Dental en Arauca. Agenda tu cita en línea.',
-    images: ['/og-home.png'],
+    images: ['/logo-png.png'],
   },
   alternates: {
     canonical: 'https://www.dentalcompany.com.co',

@@ -35,13 +35,13 @@ export const metadata: Metadata = {
     siteName: 'Dental Company',
     locale: 'es_CO',
     type: 'website',
-    images: [{ url: '/og-home.png', width: 1200, height: 630, alt: 'Dental Company Arauca' }],
+    images: [{ url: '/logo-png.png', width: 1200, height: 630, alt: 'Dental Company Arauca' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Dental Company — Clínica Odontológica en Arauca',
     description: 'La mejor clínica dental en Arauca. Especialistas en Rehabilitación Oral y Estética Dental.',
-    images: ['/og-home.png'],
+    images: ['/logo-png.png'],
   },
   icons: {
     icon: '/logo-png.png',
@@ -54,6 +54,9 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: BASE_URL,
+  },
+  verification: {
+    google: 'jhjP05TDUPGTjO8sKldTmx6iLE5QNyltRitTgsJlQYY',
   },
 }
 
