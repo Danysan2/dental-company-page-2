@@ -2,7 +2,7 @@
 set -e
 
 echo "▶ Applying DB schema..."
-npx prisma db push --accept-data-loss
+node node_modules/prisma/build/index.js db push --accept-data-loss
 
 echo "▶ Running seed..."
 node prisma/seed.js

@@ -63,7 +63,6 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma                         ./
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/bcryptjs          ./node_modules/bcryptjs
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma            ./node_modules/prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin/prisma       ./node_modules/.bin/prisma
-COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma/build/prisma_schema_build_bg.wasm ./node_modules/.bin/prisma_schema_build_bg.wasm
 
 # Entrypoint script
 COPY docker-entrypoint.sh ./docker-entrypoint.sh
