@@ -3,7 +3,30 @@ const bcrypt = require('bcryptjs')
 
 const prisma = new PrismaClient()
 
+async function applySchema() {
+  console.log('Applying schema migrations...')
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS sub_servicios (
+      id          VARCHAR(36) PRIMARY KEY DEFAULT gen_random_uuid()::text,
+      nombre      TEXT        NOT NULL,
+      servicio_id VARCHAR(36) NOT NULL REFERENCES servicios(id),
+      activo      BOOLEAN     NOT NULL DEFAULT true,
+      created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `)
+
+  await prisma.$executeRawUnsafe(`
+    ALTER TABLE citas
+      ADD COLUMN IF NOT EXISTS sub_servicio_id VARCHAR(36) REFERENCES sub_servicios(id),
+      ADD COLUMN IF NOT EXISTS hora_fin        VARCHAR
+  `)
+
+  console.log('✓ Schema OK')
+}
+
 async function main() {
+  await applySchema()
   console.log('Seeding database...')
 
   // ── Staff ────────────────────────────────────────────────────
