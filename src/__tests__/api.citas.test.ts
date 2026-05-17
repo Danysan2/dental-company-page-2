@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 // ── Mocks ────────────────────────────────────────────────────
 vi.mock('@/lib/auth', () => ({
   requireSession: vi.fn(),
+  getSession:     vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({
@@ -14,11 +15,14 @@ vi.mock('@/lib/prisma', () => ({
       findUnique:  vi.fn(),
       create:      vi.fn(),
       update:      vi.fn(),
+      updateMany:  vi.fn(),
+      count:       vi.fn(),
     },
+    $transaction: vi.fn(),
   },
 }))
 
-import { requireSession } from '@/lib/auth'
+import { requireSession, getSession } from '@/lib/auth'
 import { prisma }     from '@/lib/prisma'
 import { GET, POST }  from '@/app/api/citas/route'
 
@@ -35,22 +39,31 @@ function makeReq(url = 'http://localhost/api/citas', body?: object): NextRequest
 }
 
 const mockCita = {
-  id:         'c1',
-  clienteId:  'cl1',
-  servicioId: 'sv1',
-  fecha:      new Date('2026-05-10'),
-  hora:       '09:00',
-  estado:     'programada',
-  notas:      null,
-  precio:     120000,
-  createdAt:  new Date(),
-  cliente:    { id: 'cl1', nombre: 'Ana García', telefono: '3001234567', correo: 'ana@test.com', cedula: '1234567890' },
-  servicio:   { id: 'sv1', nombre: 'Limpieza y Profilaxis', precio: 120000 },
+  id:             'c1',
+  clienteId:      'cl1',
+  servicioId:     'sv1',
+  subServicioId:  null,
+  fecha:          new Date('2026-05-10'),
+  hora:           '09:00',
+  horaFin:        null,
+  estado:         'programada',
+  notas:          null,
+  precio:         120000,
+  createdAt:      new Date(),
+  cliente:        { id: 'cl1', nombre: 'Ana García', telefono: '3001234567', correo: 'ana@test.com', cedula: '1234567890' },
+  servicio:       { id: 'sv1', nombre: 'Limpieza y Profilaxis', precio: 120000, duracion: 60 },
+  subServicio:    null,
 }
+
+const mockSession = { id: 'u1', email: 'doc@test.com', nombre: 'Doc', rol: 'doctora' as const }
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(requireSession).mockResolvedValue({ session: { id: 'u1', email: 'doc@test.com', nombre: 'Doc', rol: 'doctora' } })
+  vi.mocked(requireSession).mockResolvedValue({ session: mockSession })
+  vi.mocked(getSession).mockResolvedValue(mockSession)
+  vi.mocked(prisma.cita.updateMany).mockResolvedValue({ count: 0 } as never)
+  vi.mocked(prisma.cita.count).mockResolvedValue(0 as never)
+  vi.mocked(prisma.$transaction).mockImplementation(async (fn: (tx: typeof prisma) => Promise<unknown>) => fn(prisma))
 })
 
 // ── GET /api/citas ───────────────────────────────────────────

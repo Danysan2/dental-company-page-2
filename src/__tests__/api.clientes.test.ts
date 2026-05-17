@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 // ── Mocks ────────────────────────────────────────────────────
 vi.mock('@/lib/auth', () => ({
   requireSession: vi.fn(),
+  getSession:     vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({
@@ -11,6 +12,7 @@ vi.mock('@/lib/prisma', () => ({
     cliente: {
       findMany:   vi.fn(),
       findUnique: vi.fn(),
+      findFirst:  vi.fn(),
       create:     vi.fn(),
       update:     vi.fn(),
     },
@@ -20,9 +22,11 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
-import { requireSession } from '@/lib/auth'
+import { requireSession, getSession } from '@/lib/auth'
 import { prisma }      from '@/lib/prisma'
 import { GET, POST }   from '@/app/api/clientes/route'
+
+vi.mock('@/lib/rateLimit', () => ({ checkRateLimit: vi.fn().mockReturnValue(true) }))
 
 // ── Helpers ──────────────────────────────────────────────────
 function makeReq(url = 'http://localhost/api/clientes', body?: object): NextRequest {
@@ -55,7 +59,10 @@ const mockClienteDB = {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(requireSession).mockResolvedValue({ session: { id: 'u1', email: 'doc@test.com', nombre: 'Doc', rol: 'doctora' } })
+  const session = { id: 'u1', email: 'doc@test.com', nombre: 'Doc', rol: 'doctora' as const }
+  vi.mocked(requireSession).mockResolvedValue({ session })
+  vi.mocked(getSession).mockResolvedValue(session)
+  vi.mocked(prisma.cliente.findFirst).mockResolvedValue(null as never)
 })
 
 // ── GET /api/clientes ────────────────────────────────────────

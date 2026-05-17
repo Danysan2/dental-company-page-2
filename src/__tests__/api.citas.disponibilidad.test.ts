@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server'
 // ── Mocks ────────────────────────────────────────────────────
 vi.mock('@/lib/auth', () => ({
   requireSession: vi.fn(),
+  getSession:     vi.fn(),
 }))
 
 vi.mock('@/lib/prisma', () => ({
@@ -14,7 +15,7 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
-import { requireSession } from '@/lib/auth'
+import { requireSession, getSession } from '@/lib/auth'
 import { prisma }     from '@/lib/prisma'
 import { GET }        from '@/app/api/citas/disponibilidad/route'
 
@@ -25,16 +26,21 @@ function makeReq(url: string): NextRequest {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  vi.mocked(requireSession).mockResolvedValue({ session: { id: 'u1', email: 'doc@test.com', nombre: 'Doc', rol: 'doctora' } })
+  const session = { id: 'u1', email: 'doc@test.com', nombre: 'Doc', rol: 'doctora' as const }
+  vi.mocked(requireSession).mockResolvedValue({ session })
+  vi.mocked(getSession).mockResolvedValue(session)
+  // default: no appointments
+  vi.mocked(prisma.cita.findMany).mockResolvedValue([] as never)
 })
 
 // ── GET /api/citas/disponibilidad ────────────────────────────
 describe('GET /api/citas/disponibilidad', () => {
-  it('retorna 401 si no hay sesión', async () => {
-    const { NextResponse } = await import('next/server')
-    vi.mocked(requireSession).mockResolvedValue(NextResponse.json({ error: 'No autorizado' }, { status: 401 }))
-    const res = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-05-10'))
-    expect(res.status).toBe(401)
+  // La ruta es pública (sin autenticación), siempre retorna 200/400/500
+  it('retorna 200 con todos los slots disponibles cuando no hay citas', async () => {
+    const res  = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-05-10'))
+    const body = await res.json()
+    expect(res.status).toBe(200)
+    expect(body.disponibles).toHaveLength(10)
   })
 
   it('retorna 400 si falta el parámetro fecha', async () => {
