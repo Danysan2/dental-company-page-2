@@ -57,7 +57,7 @@ export async function PUT(
     if (uuidErr) return BadRequest(uuidErr)
 
     const body = await req.json()
-    const { fecha, hora, estado, notas, precio, servicioId, clienteId } = body
+    const { fecha, hora, horaFin, estado, notas, precio, servicioId, subServicioId, clienteId } = body
 
     if (fecha) {
       const err = validarFecha(fecha)
@@ -107,17 +107,20 @@ export async function PUT(
     const cita = await prisma.cita.update({
       where: { id },
       data: {
-        ...(fecha      ? { fecha: new Date(fecha) }         : {}),
-        ...(hora       ? { hora }                            : {}),
-        ...(estado     ? { estado }                          : {}),
-        ...(notas      !== undefined ? { notas:  notas ?? null } : {}),
-        ...(precio     !== undefined ? { precio: precio ?? null } : {}),
-        ...(servicioId ? { servicioId }                     : {}),
-        ...(clienteId  ? { clienteId }                      : {}),
+        ...(fecha           ? { fecha: new Date(fecha) }                 : {}),
+        ...(hora            ? { hora }                                    : {}),
+        ...(horaFin         !== undefined ? { horaFin: horaFin || null } : {}),
+        ...(estado          ? { estado }                                  : {}),
+        ...(notas           !== undefined ? { notas:  notas ?? null }     : {}),
+        ...(precio          !== undefined ? { precio: precio ?? null }    : {}),
+        ...(servicioId      ? { servicioId }                              : {}),
+        ...(subServicioId   !== undefined ? { subServicioId: subServicioId || null } : {}),
+        ...(clienteId       ? { clienteId }                              : {}),
       },
       include: {
-        cliente:  { select: { id: true, nombre: true, telefono: true, correo: true, cedula: true } },
-        servicio: { select: { id: true, nombre: true, precio: true, duracion: true } },
+        cliente:     { select: { id: true, nombre: true, telefono: true, correo: true, cedula: true } },
+        servicio:    { select: { id: true, nombre: true, precio: true, duracion: true } },
+        subServicio: { select: { id: true, nombre: true } },
       },
     })
 

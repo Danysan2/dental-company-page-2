@@ -32,14 +32,17 @@ interface Cita {
   id: string
   cliente_id: string
   servicio_id: string
+  sub_servicio_id: string
   cliente_nombre: string
   cliente_cedula: string
   cliente_telefono: string
   cliente_correo: string
   servicio: string
+  sub_servicio: string
   precio: number
   fecha: string
   hora: string
+  hora_fin: string
   estado: string
   notas: string
   createdAt: string
@@ -53,10 +56,17 @@ interface Cliente {
   correo: string
 }
 
+interface SubServicio {
+  id: string
+  nombre: string
+  servicioId: string
+}
+
 interface Servicio {
   id: string
   nombre: string
   precio: number
+  subServicios: SubServicio[]
 }
 
 /* ── Helpers ── */
@@ -277,16 +287,18 @@ interface CitaForm {
   cliente_id: string
   servicio_id: string
   servicio: string
+  sub_servicio_id: string
   precio: number
   fecha: string
   hora: string
+  hora_fin: string
   estado: string
   notas: string
 }
 
 const EMPTY_FORM: CitaForm = {
-  cliente_id: '', servicio_id: '', servicio: '',
-  precio: 0, fecha: '', hora: '', estado: 'programada', notas: '',
+  cliente_id: '', servicio_id: '', servicio: '', sub_servicio_id: '',
+  precio: 0, fecha: '', hora: '', hora_fin: '', estado: 'programada', notas: '',
 }
 
 function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onClienteCreado }: {
@@ -299,11 +311,8 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
   onClienteCreado: (c: Cliente) => void
 }) {
   const [form, setForm] = useState<CitaForm>(cita ?? EMPTY_FORM)
-  const [horasDisp, setHorasDisp] = useState<string[]>(HORARIOS)
-  const [loadHoras, setLoadHoras] = useState(false)
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
-  const slotVersionRef = useRef(0)
   const saveFlight = useRef(false)
 
   useEscapeKey(onClose)
@@ -317,36 +326,20 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
       servicio_id: svcId,
       servicio: svc?.nombre ?? '',
       precio: svc?.precio ?? f.precio,
+      sub_servicio_id: '',
     }))
   }
 
-  useEffect(() => {
-    if (!form.fecha) return
-    setLoadHoras(true)
-    const version = ++slotVersionRef.current
-    fetch(`/api/citas/disponibilidad?fecha=${form.fecha}`)
-      .then(r => r.ok ? r.json() : Promise.reject())
-      .then(data => {
-        if (version !== slotVersionRef.current) return
-        const disponibles: string[] = data.disponibles ?? []
-        if (mode === 'edit' && cita?.hora && !disponibles.includes(cita.hora.slice(0, 5))) {
-          setHorasDisp([cita.hora.slice(0, 5), ...disponibles].sort())
-        } else {
-          setHorasDisp(disponibles)
-        }
-      })
-      .catch(() => {
-        if (version !== slotVersionRef.current) return
-        setHorasDisp([])
-        setErr('No se pudo verificar disponibilidad. Por favor intenta de nuevo.')
-      })
-      .finally(() => { if (version === slotVersionRef.current) setLoadHoras(false) })
-  }, [form.fecha, mode, cita?.hora])
+  const subServicios = servicios.find(s => s.id === form.servicio_id)?.subServicios ?? []
 
   const save = async () => {
     if (saveFlight.current) return
     if (!form.cliente_id || !form.servicio_id || !form.fecha || !form.hora) {
       setErr('Completa los campos obligatorios (*).')
+      return
+    }
+    if (form.hora_fin && form.hora_fin <= form.hora) {
+      setErr('La hora de fin debe ser posterior a la hora de inicio.')
       return
     }
     saveFlight.current = true
@@ -393,6 +386,20 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
             </div>
 
             <div className="form-group">
+              <label>Subservicio</label>
+              <select
+                value={form.sub_servicio_id}
+                onChange={e => upd('sub_servicio_id', e.target.value)}
+                disabled={!form.servicio_id || subServicios.length === 0}
+              >
+                <option value="">— Seleccionar —</option>
+                {subServicios.map(s => (
+                  <option key={s.id} value={s.id}>{s.nombre}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
               <label>Precio (COP)</label>
               <input
                 type="number" min="0" step="1000"
@@ -415,23 +422,27 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
               <input
                 type="date"
                 value={form.fecha}
-                onChange={e => { upd('fecha', e.target.value); upd('hora', '') }}
+                onChange={e => upd('fecha', e.target.value)}
               />
             </div>
 
             <div className="form-group">
-              <label>Hora * {loadHoras && <small style={{ color: 'var(--text-3)' }}>(cargando…)</small>}</label>
-              <select
+              <label>Hora inicio *</label>
+              <input
+                type="time"
                 value={form.hora}
                 onChange={e => upd('hora', e.target.value)}
-                disabled={!form.fecha || loadHoras}
-              >
-                <option value="">— Seleccionar —</option>
-                {horasDisp.map(h => <option key={h} value={h}>{h}</option>)}
-              </select>
-              {form.fecha && horasDisp.length === 0 && !loadHoras && (
-                <small style={{ color: '#c62828' }}>No hay horas disponibles para esta fecha.</small>
-              )}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Hora fin <span style={{ fontWeight: 400, opacity: 0.6 }}>(opcional)</span></label>
+              <input
+                type="time"
+                value={form.hora_fin}
+                min={form.hora || undefined}
+                onChange={e => upd('hora_fin', e.target.value)}
+              />
             </div>
 
             <div className="form-group" style={{ gridColumn: '1/-1' }}>
@@ -449,7 +460,7 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
         </div>
         <div className="modal-footer">
           <button className="btn btn-ghost" onClick={onClose}>Cancelar</button>
-          <button className="btn btn-primary" onClick={save} disabled={saving || loadHoras}>
+          <button className="btn btn-primary" onClick={save} disabled={saving}>
             {saving ? 'Guardando…' : mode === 'new' ? 'Crear cita' : 'Guardar cambios'}
           </button>
         </div>
@@ -732,13 +743,15 @@ export default function AdminCitas() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clienteId: form.cliente_id,
-          servicioId: form.servicio_id,
-          precio: form.precio,
-          fecha: form.fecha,
-          hora: form.hora,
-          estado: form.estado,
-          notas: form.notas || null,
+          clienteId:    form.cliente_id,
+          servicioId:   form.servicio_id,
+          subServicioId: form.sub_servicio_id || null,
+          precio:        form.precio,
+          fecha:         form.fecha,
+          hora:          form.hora,
+          horaFin:       form.hora_fin || null,
+          estado:        form.estado,
+          notas:         form.notas || null,
         }),
       })
       if (!res.ok) {
@@ -765,13 +778,15 @@ export default function AdminCitas() {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          clienteId: form.cliente_id,
-          servicioId: form.servicio_id,
-          precio: form.precio,
-          fecha: form.fecha,
-          hora: form.hora,
-          estado: form.estado,
-          notas: form.notas || null,
+          clienteId:     form.cliente_id,
+          servicioId:    form.servicio_id,
+          subServicioId: form.sub_servicio_id || null,
+          precio:        form.precio,
+          fecha:         form.fecha,
+          hora:          form.hora,
+          horaFin:       form.hora_fin || null,
+          estado:        form.estado,
+          notas:         form.notas || null,
         }),
       })
       if (!res.ok) {
@@ -1062,14 +1077,16 @@ export default function AdminCitas() {
         <CitaModal
           mode="edit"
           cita={{
-            cliente_id: selected.cliente_id,
-            servicio_id: selected.servicio_id,
-            servicio: selected.servicio,
-            precio: selected.precio,
-            fecha: selected.fecha,
-            hora: selected.hora?.slice(0, 5),
-            estado: selected.estado,
-            notas: selected.notas ?? '',
+            cliente_id:      selected.cliente_id,
+            servicio_id:     selected.servicio_id,
+            servicio:        selected.servicio,
+            sub_servicio_id: selected.sub_servicio_id ?? '',
+            precio:          selected.precio,
+            fecha:           selected.fecha,
+            hora:            selected.hora?.slice(0, 5) ?? '',
+            hora_fin:        selected.hora_fin?.slice(0, 5) ?? '',
+            estado:          selected.estado,
+            notas:           selected.notas ?? '',
           }}
           clients={clientes} servicios={servicios}
           onClose={() => setModal(null)}

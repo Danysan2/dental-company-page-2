@@ -9,6 +9,13 @@ export async function GET() {
     const servicios = await prisma.servicio.findMany({
       where:   { activo: true },
       orderBy: { nombre: 'asc' },
+      include: {
+        subServicios: {
+          where:   { activo: true },
+          select:  { id: true, nombre: true },
+          orderBy: { nombre: 'asc' },
+        },
+      },
     })
     return NextResponse.json(servicios)
   } catch (err) {

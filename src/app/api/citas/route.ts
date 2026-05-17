@@ -52,8 +52,9 @@ export async function GET(req: NextRequest) {
     const citas = await prisma.cita.findMany({
       where,
       include: {
-        cliente:  { select: { id: true, nombre: true, telefono: true, correo: true, cedula: true } },
-        servicio: { select: { id: true, nombre: true, precio: true } },
+        cliente:     { select: { id: true, nombre: true, telefono: true, correo: true, cedula: true } },
+        servicio:    { select: { id: true, nombre: true, precio: true } },
+        subServicio: { select: { id: true, nombre: true } },
       },
       orderBy: [{ fecha: 'asc' }, { hora: 'asc' }],
       take: 500,
@@ -61,20 +62,23 @@ export async function GET(req: NextRequest) {
 
     // Flatten to match original AdminCitas expectations
     const flat = citas.map(c => ({
-      id:               c.id,
-      cliente_id:       c.clienteId,
-      servicio_id:      c.servicioId,
-      cliente_nombre:   c.cliente.nombre,
-      cliente_cedula:   c.cliente.cedula  ?? '',
-      cliente_telefono: c.cliente.telefono ?? '',
-      cliente_correo:   c.cliente.correo  ?? '',
-      servicio:         c.servicio.nombre,
-      precio:           c.precio ?? c.servicio.precio,
-      fecha:            c.fecha.toISOString().slice(0, 10),
-      hora:             c.hora,
-      estado:           c.estado,
-      notas:            c.notas ?? '',
-      createdAt:        c.createdAt,
+      id:                 c.id,
+      cliente_id:         c.clienteId,
+      servicio_id:        c.servicioId,
+      sub_servicio_id:    c.subServicioId ?? '',
+      cliente_nombre:     c.cliente.nombre,
+      cliente_cedula:     c.cliente.cedula    ?? '',
+      cliente_telefono:   c.cliente.telefono  ?? '',
+      cliente_correo:     c.cliente.correo    ?? '',
+      servicio:           c.servicio.nombre,
+      sub_servicio:       c.subServicio?.nombre ?? '',
+      precio:             c.precio ?? c.servicio.precio,
+      fecha:              c.fecha.toISOString().slice(0, 10),
+      hora:               c.hora,
+      hora_fin:           c.horaFin ?? '',
+      estado:             c.estado,
+      notas:              c.notas ?? '',
+      createdAt:          c.createdAt,
     }))
 
     return NextResponse.json(flat)
@@ -88,7 +92,7 @@ export async function POST(req: NextRequest) {
   try {
     // Allow both authed staff and anonymous public booking
     const body = await req.json()
-    const { clienteId, servicioId, fecha, hora, notas, precio, estado } = body
+    const { clienteId, servicioId, subServicioId, fecha, hora, horaFin, notas, precio, estado } = body
 
     if (!clienteId)  return BadRequest('clienteId es requerido')
     if (!servicioId) return BadRequest('servicioId es requerido')
@@ -136,15 +140,18 @@ export async function POST(req: NextRequest) {
           data: {
             clienteId,
             servicioId,
+            ...(subServicioId ? { subServicioId } : {}),
             fecha:  fechaDate,
             hora,
+            ...(horaFin ? { horaFin } : {}),
             notas:  notasSanitizadas,
             precio: precioFinal,
             estado: estadoFinal,
           },
           include: {
-            cliente:  { select: { id: true, nombre: true, telefono: true, correo: true, cedula: true } },
-            servicio: { select: { id: true, nombre: true, precio: true, duracion: true } },
+            cliente:     { select: { id: true, nombre: true, telefono: true, correo: true, cedula: true } },
+            servicio:    { select: { id: true, nombre: true, precio: true, duracion: true } },
+            subServicio: { select: { id: true, nombre: true } },
           },
         })
       })
@@ -191,13 +198,16 @@ export async function POST(req: NextRequest) {
       id:               cita.id,
       cliente_id:       cita.clienteId,
       servicio_id:      cita.servicioId,
+      sub_servicio_id:  cita.subServicioId ?? '',
       cliente_nombre:   cita.cliente.nombre,
       cliente_cedula:   cita.cliente.cedula  ?? '',
       cliente_telefono: cita.cliente.telefono ?? '',
       servicio:         cita.servicio.nombre,
+      sub_servicio:     cita.subServicio?.nombre ?? '',
       precio:           cita.precio ?? cita.servicio.precio,
       fecha:            cita.fecha.toISOString().slice(0, 10),
       hora:             cita.hora,
+      hora_fin:         cita.horaFin ?? '',
       estado:           cita.estado,
       notas:            cita.notas ?? '',
     }, { status: 201 })
