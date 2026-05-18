@@ -46,6 +46,7 @@ model Cliente {
 
   citas     Cita[]
 
+  @@index([telefono])
   @@map("clientes")
 }
 
@@ -95,5 +96,8 @@ model Cita {
   servicio       Servicio    @relation(fields: [servicioId], references: [id])
   subServicio    SubServicio? @relation(fields: [subServicioId], references: [id])
 
+  @@index([fecha, hora, estado])
+  @@index([clienteId])
+  @@index([servicioId])
   @@map("citas")
 }

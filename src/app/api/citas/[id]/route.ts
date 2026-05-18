@@ -16,6 +16,14 @@ import {
 
 const VALID_ESTADOS = ['programada', 'completada', 'cancelada', 'no_asistio'] as const
 
+// Transiciones permitidas: estado_actual → [estados_destino]
+const TRANSITIONS: Record<string, string[]> = {
+  programada: ['completada', 'cancelada', 'no_asistio'],
+  completada: [],              // estado final
+  cancelada:  ['programada'],  // se puede reagendar
+  no_asistio: ['programada'],  // se puede reagendar
+}
+
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -67,11 +75,23 @@ export async function PUT(
       const err = validarHora(hora)
       if (err) return BadRequest(err)
     }
+    if (horaFin) {
+      const errHoraFin = validarHora(horaFin)
+      if (errHoraFin) return BadRequest(errHoraFin)
+    }
     if (estado && !VALID_ESTADOS.includes(estado)) {
       return BadRequest('Estado inválido')
     }
     if (precio !== undefined && (typeof precio !== 'number' || precio < 0)) {
       return BadRequest('Precio inválido')
+    }
+
+    // Validar horaFin > hora combinando valores nuevos y existentes
+    if (horaFin || hora) {
+      // Se resolverá contra current más abajo si es necesario; aquí solo si ambos vienen en el body
+      if (horaFin && hora && horaFin <= hora) {
+        return BadRequest('La hora de fin debe ser después de la hora de inicio')
+      }
     }
 
     // Fetch current cita (needed for availability check and Sheets fallback search)
@@ -82,6 +102,22 @@ export async function PUT(
       },
     })
     if (!current) return NotFound('Cita no encontrada')
+
+    // Validar transición de estado
+    if (estado && estado !== current.estado) {
+      const allowed = TRANSITIONS[current.estado] ?? []
+      if (!allowed.includes(estado)) {
+        return BadRequest(`No se puede cambiar de "${current.estado}" a "${estado}"`)
+      }
+    }
+
+    // Validar horaFin > hora con valores combinados (nuevo + existente)
+    if (horaFin && !hora && horaFin <= current.hora) {
+      return BadRequest('La hora de fin debe ser después de la hora de inicio')
+    }
+    if (hora && !horaFin && current.horaFin && current.horaFin <= hora) {
+      return BadRequest('La hora de fin debe ser después de la hora de inicio')
+    }
 
     // Check availability if date/time changes
     if (fecha || hora) {
@@ -166,6 +202,7 @@ export async function PUT(
             precio:          cita.precio ?? cita.servicio.precio,
             fecha:           nuevaFecha,
             hora:            nuevaHora,
+            horaFin:         cita.horaFin ?? null,
             duracionMinutos: cita.servicio.duracion ?? 60,
             estado:          cita.estado,
             notas:           cita.notas,

@@ -153,17 +153,19 @@ function StepBar({ step }: { step: number }) {
 }
 
 // ── Main Component ──────────────────────────────────────────
-interface Servicio { id: string; nombre: string; precio?: number | null }
+interface SubServicio { id: string; nombre: string }
+interface Servicio { id: string; nombre: string; precio?: number | null; subServicios?: SubServicio[] }
 
 const INITIAL_FORM = {
   nombre: '', cedula: '', telefono: '', correo: '',
-  servicio_id: '', servicio: '', precio: 0,
+  servicio_id: '', servicio: '', sub_servicio_id: '', sub_servicio: '', precio: 0,
   fecha: '', hora: '', notas: '',
 }
 
 export default function CitasPublicClient() {
   const [step, setStep] = useState(0)
   const [form, setForm] = useState(INITIAL_FORM)
+  const [servicios, setServicios] = useState<Servicio[]>([])
   const [servError, setServError] = useState('')
   const [availableSlots, setAvailableSlots] = useState<string[] | null>(null)
   const [loading, setLoading] = useState(false)
@@ -173,19 +175,18 @@ export default function CitasPublicClient() {
   const slotVersionRef = useRef(0)
   const submitInFlight = useRef(false)
 
-  // Auto-load "consulta general" service on mount
+  // Load servicios on mount
   useEffect(() => {
     fetch('/api/servicios')
       .then(r => r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))
       .then((data: Servicio[]) => {
-        const consulta = (data ?? []).find(s => s.nombre.toLowerCase().includes('consulta'))
-        if (consulta) {
-          setForm(f => ({ ...f, servicio_id: consulta.id, servicio: consulta.nombre, precio: consulta.precio ?? 0 }))
-        } else {
-          setServError('No hay consultas disponibles en este momento. Contáctanos por WhatsApp.')
+        if (!data?.length) {
+          setServError('No hay servicios disponibles en este momento. Contáctanos por WhatsApp.')
+          return
         }
+        setServicios(data)
       })
-      .catch(() => setServError('No pudimos cargar el servicio. Intenta de nuevo.'))
+      .catch(() => setServError('No pudimos cargar los servicios. Intenta de nuevo.'))
   }, [])
 
   // Load available slots when date changes
@@ -226,8 +227,11 @@ export default function CitasPublicClient() {
     return errs
   }
 
+  const selectedServicio = servicios.find(s => s.id === form.servicio_id)
+  const subServicios = selectedServicio?.subServicios ?? []
+
   const canAdvance = () => {
-    if (step === 0) return isNombreValid() && isCedulaValid() && isTelefonoValid() && isCorreoValid()
+    if (step === 0) return isNombreValid() && isCedulaValid() && isTelefonoValid() && isCorreoValid() && !!form.servicio_id
     if (step === 1) return !!form.fecha
     if (step === 2) return !!form.hora
     return true
@@ -273,6 +277,7 @@ export default function CitasPublicClient() {
         body: JSON.stringify({
           clienteId: cliente.id,
           servicioId: form.servicio_id,
+          ...(form.sub_servicio_id ? { subServicioId: form.sub_servicio_id } : {}),
           fecha: form.fecha,
           hora: form.hora,
           precio: form.precio,
@@ -290,7 +295,7 @@ export default function CitasPublicClient() {
         nombrePaciente: form.nombre.trim(),
         correo: form.correo.trim() || null,
         telefono: form.telefono.trim(),
-        servicio: form.servicio,
+        servicio: form.sub_servicio ? `${form.servicio} — ${form.sub_servicio}` : form.servicio,
         fecha: form.fecha,
         hora: form.hora,
       })
@@ -346,7 +351,7 @@ export default function CitasPublicClient() {
               className="btn btn-primary"
               onClick={() => {
                 setSuccess(false)
-                setForm(f => ({ ...INITIAL_FORM, servicio_id: f.servicio_id, servicio: f.servicio, precio: f.precio }))
+                setForm({ ...INITIAL_FORM })
                 setStep(0)
               }}
             >
@@ -408,6 +413,38 @@ export default function CitasPublicClient() {
                   {fieldErrors.correo && <span className="field-error">{fieldErrors.correo}</span>}
                 </div>
                 <div className="form-group">
+                  <label>Servicio *</label>
+                  <select
+                    value={form.servicio_id}
+                    onChange={e => {
+                      const s = servicios.find(sv => sv.id === e.target.value)
+                      setForm(f => ({ ...f, servicio_id: e.target.value, servicio: s?.nombre ?? '', sub_servicio_id: '', sub_servicio: '', precio: s?.precio ?? 0 }))
+                    }}
+                  >
+                    <option value="">— Selecciona un servicio —</option>
+                    {servicios.map(s => (
+                      <option key={s.id} value={s.id}>{s.nombre}</option>
+                    ))}
+                  </select>
+                </div>
+                {subServicios.length > 0 && (
+                  <div className="form-group">
+                    <label>Subservicio <span>(opcional)</span></label>
+                    <select
+                      value={form.sub_servicio_id}
+                      onChange={e => {
+                        const sub = subServicios.find(sv => sv.id === e.target.value)
+                        setForm(f => ({ ...f, sub_servicio_id: e.target.value, sub_servicio: sub?.nombre ?? '' }))
+                      }}
+                    >
+                      <option value="">— Selecciona un subservicio —</option>
+                      {subServicios.map(s => (
+                        <option key={s.id} value={s.id}>{s.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                <div className="form-group">
                   <label>Notas adicionales <span>(opcional)</span></label>
                   <textarea rows={3} maxLength={500}
                     placeholder="¿Tienes alguna preocupación específica o quieres que sepamos algo antes de tu cita?"
@@ -461,7 +498,7 @@ export default function CitasPublicClient() {
                   { label: 'Cédula', value: form.cedula },
                   { label: 'Teléfono', value: form.telefono },
                   { label: 'Correo', value: form.correo || '—' },
-                  { label: 'Servicio', value: form.servicio },
+                  { label: 'Servicio', value: form.sub_servicio ? `${form.servicio} — ${form.sub_servicio}` : form.servicio },
                   { label: 'Fecha', value: new Date(form.fecha + 'T12:00:00').toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) },
                   { label: 'Hora', value: form.hora },
                   { label: 'Notas', value: form.notas || '—' },

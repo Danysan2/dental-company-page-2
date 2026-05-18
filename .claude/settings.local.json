@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"D:\\\\Olinky\\\\dental-company-next\" -Filter \"schema.prisma\" -Recurse -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "PowerShell(cd \"D:\\\\Olinky\\\\dental-company-next\"; $line = Get-Content .env.local | Where-Object { $_ -match \"^DATABASE_URL\" } | Select-Object -First 1; $url = \\($line -replace '^DATABASE_URL=[\"'']?', ''\\) -replace '[\"'']$', ''; $env:DATABASE_URL = $url; npx prisma migrate dev --name add_subservicio_hora_fin 2>&1)"
+    ]
+  }
+}

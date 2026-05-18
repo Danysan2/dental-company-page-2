@@ -98,10 +98,21 @@ export async function DELETE(
     const uuidErr = validarUUID(id)
     if (uuidErr) return BadRequest(uuidErr)
 
-    await prisma.cliente.update({
-      where: { id },
-      data:  { activo: false },
-    })
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    await prisma.$transaction([
+      // Cancelar citas futuras programadas del cliente
+      prisma.cita.updateMany({
+        where: { clienteId: id, estado: 'programada', fecha: { gte: today } },
+        data: { estado: 'cancelada' },
+      }),
+      // Desactivar cliente
+      prisma.cliente.update({
+        where: { id },
+        data: { activo: false },
+      }),
+    ])
 
     return new NextResponse(null, { status: 204 })
   } catch (err) {

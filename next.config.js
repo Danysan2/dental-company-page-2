@@ -29,7 +29,7 @@ const nextConfig = {
             value: [
               "default-src 'self'",
               // Next.js needs unsafe-inline for styles; scripts are hashed by Next.js itself
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.elfsight.com https://apps.elfsight.com https://elfsightcdn.com https://static.cloudflareinsights.com",
+              "script-src 'self' 'unsafe-inline' https://static.elfsight.com https://apps.elfsight.com https://elfsightcdn.com https://static.cloudflareinsights.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' data: https://fonts.gstatic.com",
               "img-src 'self' data: https: blob:",

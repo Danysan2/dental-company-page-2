@@ -100,6 +100,11 @@ export async function POST(req: NextRequest) {
     if (errFecha)    return BadRequest(errFecha)
     const errHora = validarHora(hora)
     if (errHora)     return BadRequest(errHora)
+    if (horaFin) {
+      const errHoraFin = validarHora(horaFin)
+      if (errHoraFin) return BadRequest(errHoraFin)
+      if (horaFin <= hora) return BadRequest('La hora de fin debe ser después de la hora de inicio')
+    }
 
     // Rate limit para reservas públicas: máx 15 por IP cada 15 min
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
@@ -175,6 +180,7 @@ export async function POST(req: NextRequest) {
           precio:          cita.precio ?? cita.servicio.precio,
           fecha:           cita.fecha.toISOString().slice(0, 10),
           hora:            cita.hora,
+          horaFin:         cita.horaFin ?? null,
           duracionMinutos: cita.servicio.duracion ?? 60,
           estado:          cita.estado,
           notas:           cita.notas,

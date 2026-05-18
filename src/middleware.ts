@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server'
 import { getSessionFromRequest } from './lib/auth'
 import type { SessionPayload } from './lib/auth'
 
-const PUBLIC_PATHS = ['/', '/nosotros', '/servicios', '/citas', '/contacto', '/login']
+const PUBLIC_PATHS = ['/', '/sobre-nosotros', '/servicios', '/citas', '/login']
 const API_PUBLIC   = [
   '/api/auth/login',
   '/api/auth/logout',

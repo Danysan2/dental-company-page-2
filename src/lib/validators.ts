@@ -25,17 +25,24 @@ export function validarCorreo(correo: string): string | null {
   return null
 }
 
-export function validarFecha(fecha: string): string | null {
+export function validarFecha(fecha: string, { allowPast = false } = {}): string | null {
   if (!fecha) return 'La fecha es requerida'
   if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return 'Formato de fecha inválido (YYYY-MM-DD)'
   const d = new Date(fecha)
   if (isNaN(d.getTime())) return 'Fecha inválida'
+  if (!allowPast) {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (d < today) return 'La fecha no puede ser en el pasado'
+  }
   return null
 }
 
 export function validarHora(hora: string): string | null {
   if (!hora) return 'La hora es requerida'
   if (!/^\d{2}:\d{2}$/.test(hora)) return 'Formato de hora inválido (HH:MM)'
+  const [hh, mm] = hora.split(':').map(Number)
+  if (hh > 23 || mm > 59) return 'Hora inválida'
   return null
 }
 

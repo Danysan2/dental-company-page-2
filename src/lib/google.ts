@@ -98,6 +98,7 @@ export interface CitaGoogleData {
   precio:         number | null
   fecha:          string  // YYYY-MM-DD
   hora:           string  // HH:MM (hora_inicio)
+  horaFin?:       string | null  // HH:MM (hora_fin manual)
   duracionMinutos: number
   estado:         string
   notas:          string | null
@@ -201,7 +202,8 @@ export async function crearEventoCalendar(cita: CitaGoogleData): Promise<string 
     const auth     = getAuth()
     const calendar = google.calendar({ version: 'v3', auth })
 
-    const horaFin  = calcularHoraFin(cita.hora, cita.duracionMinutos)
+    // Usa horaFin manual si existe, sino calcula por duración del servicio
+    const horaFin  = cita.horaFin ?? calcularHoraFin(cita.hora, cita.duracionMinutos)
     const startDt  = `${cita.fecha}T${cita.hora}:00`
     const endDt    = `${cita.fecha}T${horaFin}:00`
     const tz       = 'America/Bogota'
