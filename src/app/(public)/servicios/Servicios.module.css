@@ -1,17 +1,151 @@
-.page       { padding: 4rem 0; }
-.container  { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+.page       { padding: 4rem 0 3rem; }
+.container  { max-width: 900px; margin: 0 auto; padding: 0 1.5rem; }
+
+/* Hero */
 .hero       { text-align: center; margin-bottom: 3rem; }
-.hero h1    { font-size: 2.5rem; font-weight: 900; margin-bottom: .75rem; }
-.hero p     { color: var(--color-text-muted); font-size: 1.05rem; }
+.heroLabel  {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--c-accent, #896646);
+  margin-bottom: 0.5rem;
+}
+.hero h1    { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.75rem; color: var(--c-dark, #3d3c3b); }
+.heroSub    { color: var(--text-2, #888); font-size: 0.95rem; max-width: 600px; margin: 0 auto; line-height: 1.6; }
 
-.grid       { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.25rem; margin-bottom: 3rem; }
-.servicioCard { display: flex; flex-direction: column; gap: .5rem; }
-.servicioNombre { font-size: 1.05rem; font-weight: 700; }
-.servicioDesc   { font-size: .875rem; color: var(--color-text-muted); flex: 1; }
-.servicioFooter { display: flex; align-items: center; justify-content: space-between; margin-top: .5rem; }
-.precio         { font-size: 1.1rem; font-weight: 800; color: var(--color-primary); }
-.duracion       { font-size: .8rem; color: var(--color-text-muted); }
+/* Grid */
+.grid { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 3rem; }
 
-.cta    { text-align: center; padding: 2rem; background: var(--color-bg); border-radius: var(--radius); }
-.cta h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: .75rem; }
-.cta p  { color: var(--color-text-muted); margin-bottom: 1.25rem; }
+/* Card */
+.card {
+  background: var(--c-off-white, #faf9f6);
+  border: 1px solid var(--c-warm-2, #e8e2d8);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  overflow: hidden;
+  user-select: none;
+}
+.card:hover {
+  border-color: var(--c-accent, #896646);
+  box-shadow: 0 2px 12px rgba(137, 102, 70, 0.08);
+}
+.cardOpen {
+  border-color: var(--c-accent, #896646);
+  box-shadow: 0 4px 20px rgba(137, 102, 70, 0.1);
+}
+
+/* Card header */
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.cardIcon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(137, 102, 70, 0.08);
+  border-radius: 10px;
+  font-size: 1.3rem;
+  color: var(--c-accent, #896646);
+}
+
+.cardTitleWrap { flex: 1; min-width: 0; }
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--c-dark, #3d3c3b);
+  margin: 0 0 0.25rem;
+  line-height: 1.3;
+}
+
+.cardDesc {
+  font-size: 0.82rem;
+  color: var(--text-2, #888);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Chevron */
+.chevron {
+  min-width: 20px;
+  margin-top: 4px;
+  color: var(--text-3, #aaa);
+  transition: transform 0.3s ease, color 0.2s;
+}
+.chevronOpen {
+  transform: rotate(180deg);
+  color: var(--c-accent, #896646);
+}
+
+/* Subservice list */
+.subList {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s ease, padding 0.25s ease;
+  padding: 0 1.5rem;
+}
+.subListOpen {
+  max-height: 600px;
+  padding: 0 1.5rem 1.25rem;
+}
+
+.subList ul {
+  list-style: none;
+  margin: 0;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--c-warm-2, #e8e2d8);
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.subList li {
+  font-size: 0.86rem;
+  color: var(--c-dark, #3d3c3b);
+  padding-left: 1.25rem;
+  position: relative;
+  line-height: 1.5;
+}
+.subList li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-accent, #896646);
+  opacity: 0.5;
+}
+
+/* CTA */
+.cta {
+  text-align: center;
+  padding: 2.5rem 2rem;
+  background: var(--c-off-white, #faf9f6);
+  border: 1px solid var(--c-warm-2, #e8e2d8);
+  border-radius: 16px;
+}
+.cta h2 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--c-dark, #3d3c3b); }
+.cta p  { color: var(--text-2, #888); margin-bottom: 1.25rem; font-size: 0.92rem; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .hero h1    { font-size: 1.6rem; }
+  .cardHeader { padding: 1rem 1.15rem; gap: 0.75rem; }
+  .cardIcon   { width: 36px; height: 36px; min-width: 36px; font-size: 1.1rem; }
+  .cardTitle  { font-size: 0.92rem; }
+  .cardDesc   { font-size: 0.78rem; }
+  .subList    { padding-left: 1.15rem; padding-right: 1.15rem; }
+  .subListOpen { padding: 0 1.15rem 1rem; }
+  .subList li { font-size: 0.82rem; }
+}
