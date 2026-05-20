@@ -198,7 +198,7 @@ export async function PUT(
             clienteTelefono: cita.cliente.telefono ?? '',
             clienteNombre:   cita.cliente.nombre,
             servicioId:      cita.servicioId,
-            servicioNombre:  cita.servicio.nombre,
+            servicioNombre:  cita.subServicio ? `${cita.servicio.nombre} — ${cita.subServicio.nombre}` : cita.servicio.nombre,
             precio:          cita.precio ?? cita.servicio.precio,
             fecha:           nuevaFecha,
             hora:            nuevaHora,

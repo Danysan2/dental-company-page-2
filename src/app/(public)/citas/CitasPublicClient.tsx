@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { HORARIOS } from '@/lib/helpers'
+import { formatCOP, HORARIOS } from '@/lib/helpers'
 import { validarNombre, validarCedula, validarCorreo } from '@/lib/validators'
 import PhoneInput, { isPhoneComplete } from '@/components/ui/PhoneInput'
 import { enviarCorreosCita } from '@/lib/emailService'
@@ -129,6 +129,10 @@ function TimeSlotPicker({ selectedTime, onSelect, availableSlots }: {
 // ── Step indicator ──────────────────────────────────────────
 const WA_PHONE = '573216252325'
 const WA_MESSAGE = encodeURIComponent('Hola 👋 Me comunico desde la página web de Dental Company. Me gustaría agendar una cita. ¿Podrían indicarme disponibilidad? 🦷')
+const CONSULTA_GENERAL_NOMBRE = 'Consulta general - Valoración inicial'
+const CONSULTA_GENERAL_PRECIO = 80000
+const CONSULTA_GENERAL_TEXTO =
+  'La valoración inicial tiene un valor de $80.000 COP. Si después de la consulta decides iniciar un tratamiento indicado por la doctora, como ortodoncia, brackets u otro plan odontológico con controles, ese valor se abona al costo final del tratamiento.'
 
 function StepBar({ step }: { step: number }) {
   const steps = ['Datos personales', 'Fecha', 'Hora', 'Confirmación']
@@ -162,6 +166,29 @@ const INITIAL_FORM = {
   fecha: '', hora: '', notas: '',
 }
 
+function normalizeText(value: string) {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+}
+
+function getConsultaGeneralService(servicios: Servicio[]) {
+  return servicios.find(s => {
+    const nombre = normalizeText(s.nombre)
+    return nombre.includes('consulta general') || nombre.includes('valoracion inicial')
+  }) ?? servicios.find(s => normalizeText(s.nombre).includes('odontologia general')) ?? servicios[0]
+}
+
+function buildInitialForm(servicio?: Servicio) {
+  return {
+    ...INITIAL_FORM,
+    servicio_id: servicio?.id ?? '',
+    servicio: CONSULTA_GENERAL_NOMBRE,
+    precio: CONSULTA_GENERAL_PRECIO,
+  }
+}
+
 export default function CitasPublicClient() {
   const [step, setStep] = useState(0)
   const [form, setForm] = useState(INITIAL_FORM)
@@ -185,6 +212,8 @@ export default function CitasPublicClient() {
           return
         }
         setServicios(data)
+        const consulta = getConsultaGeneralService(data)
+        setForm(f => f.servicio_id ? f : buildInitialForm(consulta))
       })
       .catch(() => setServError('No pudimos cargar los servicios. Intenta de nuevo.'))
   }, [])
@@ -226,9 +255,6 @@ export default function CitasPublicClient() {
     if (!isCorreoValid()) errs.correo = 'Correo inválido'
     return errs
   }
-
-  const selectedServicio = servicios.find(s => s.id === form.servicio_id)
-  const subServicios = selectedServicio?.subServicios ?? []
 
   const canAdvance = () => {
     if (step === 0) return isNombreValid() && isCedulaValid() && isTelefonoValid() && isCorreoValid() && !!form.servicio_id
@@ -351,7 +377,7 @@ export default function CitasPublicClient() {
               className="btn btn-primary"
               onClick={() => {
                 setSuccess(false)
-                setForm({ ...INITIAL_FORM })
+                setForm(buildInitialForm(getConsultaGeneralService(servicios)))
                 setStep(0)
               }}
             >
@@ -383,6 +409,14 @@ export default function CitasPublicClient() {
             <div className="appt-step">
               <h2>Datos personales</h2>
               <p className="appt-step__sub">Necesitamos estos datos para registrar tu cita correctamente.</p>
+              <div className="consultation-note" role="note">
+                <div>
+                  <span className="consultation-note__eyebrow">Primera cita</span>
+                  <h3>{CONSULTA_GENERAL_NOMBRE}</h3>
+                  <p>{CONSULTA_GENERAL_TEXTO}</p>
+                </div>
+                <strong>{formatCOP(CONSULTA_GENERAL_PRECIO)}</strong>
+              </div>
               <div className="appt-fields">
                 <div className="form-group">
                   <label>Nombre completo *</label>
@@ -412,38 +446,6 @@ export default function CitasPublicClient() {
                     onChange={e => update('correo', e.target.value)} />
                   {fieldErrors.correo && <span className="field-error">{fieldErrors.correo}</span>}
                 </div>
-                <div className="form-group">
-                  <label>Servicio *</label>
-                  <select
-                    value={form.servicio_id}
-                    onChange={e => {
-                      const s = servicios.find(sv => sv.id === e.target.value)
-                      setForm(f => ({ ...f, servicio_id: e.target.value, servicio: s?.nombre ?? '', sub_servicio_id: '', sub_servicio: '', precio: s?.precio ?? 0 }))
-                    }}
-                  >
-                    <option value="">— Selecciona un servicio —</option>
-                    {servicios.map(s => (
-                      <option key={s.id} value={s.id}>{s.nombre}</option>
-                    ))}
-                  </select>
-                </div>
-                {subServicios.length > 0 && (
-                  <div className="form-group">
-                    <label>Subservicio <span>(opcional)</span></label>
-                    <select
-                      value={form.sub_servicio_id}
-                      onChange={e => {
-                        const sub = subServicios.find(sv => sv.id === e.target.value)
-                        setForm(f => ({ ...f, sub_servicio_id: e.target.value, sub_servicio: sub?.nombre ?? '' }))
-                      }}
-                    >
-                      <option value="">— Selecciona un subservicio —</option>
-                      {subServicios.map(s => (
-                        <option key={s.id} value={s.id}>{s.nombre}</option>
-                      ))}
-                    </select>
-                  </div>
-                )}
                 <div className="form-group">
                   <label>Notas adicionales <span>(opcional)</span></label>
                   <textarea rows={3} maxLength={500}

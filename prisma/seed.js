@@ -50,6 +50,12 @@ async function main() {
   // ── Servicios (categorías generales) ─────────────────────────
   const serviciosData = [
     {
+      nombre:      'Consulta general - Valoración inicial',
+      descripcion: 'Primera valoración para pacientes nuevos. El valor se abona al tratamiento final si el paciente inicia un plan odontológico indicado en consulta.',
+      precio:      80000,
+      duracion:    60,
+    },
+    {
       nombre:      'Rehabilitación Oral y Estética Dental',
       descripcion: 'Restauramos y diseñamos sonrisas con materiales de última generación, logrando resultados naturales, armónicos y duraderos.',
       precio:      0,

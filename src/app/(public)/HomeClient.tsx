@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useReveal } from '@/hooks/useReveal'
 import './Home.css'
@@ -8,12 +9,42 @@ const WA_PHONE = '573216252325'
 const WA_MESSAGE = encodeURIComponent('Hola 👋 Me comunico desde la página web de Dental Company. Me gustaría agendar una cita. ¿Podrían indicarme disponibilidad? 🦷')
 
 const services = [
-  { num: '01', title: 'Rehabilitación Oral y Estética Dental', desc: 'Diseño de sonrisa, carillas de porcelana y blanqueamiento para una transformación natural y duradera.', tag: 'Estética' },
-  { num: '02', title: 'Articulación Temporomandibular', desc: 'Diagnóstico y tratamiento del dolor mandibular, bruxismo y disfunciones de la ATM con enfoque integral.', tag: 'ATM' },
-  { num: '03', title: 'Endodoncia', desc: 'Tratamiento de conductos con tecnología de punta para salvar tu diente y eliminar el dolor de raíz.', tag: 'Salud' },
-  { num: '04', title: 'Periodoncia', desc: 'Prevención y tratamiento de enfermedades de las encías para mantener unas bases sanas y fuertes.', tag: 'Encías' },
-  { num: '05', title: 'Ortodoncia', desc: 'Brackets, alineadores y aparatología fija o removible para una sonrisa bien alineada a cualquier edad.', tag: 'Estética' },
-  { num: '06', title: 'Odontología General', desc: 'Consultas, limpiezas, obturaciones y diagnóstico preventivo para cuidar tu salud bucal en cada etapa de tu vida.', tag: 'General' },
+  {
+    num: '01', tag: 'Estética',
+    title: 'Rehabilitación Oral y Estética Dental',
+    desc: 'Diseño de sonrisa, carillas de porcelana y blanqueamiento para una transformación natural y duradera.',
+    subs: ['Diseños de sonrisa en cerámica: carillas y lentes cerámicos', 'Diseños de sonrisa en resina de alta estética', 'Carillas directas e indirectas', 'Incrustaciones (inlays/onlays)', 'Coronas totalmente cerámicas y metal-cerámica', 'Prótesis fijas, sobre implantes, totales y removibles'],
+  },
+  {
+    num: '02', tag: 'ATM',
+    title: 'Articulación Temporomandibular (ATM)',
+    desc: 'Diagnóstico y tratamiento del dolor mandibular, bruxismo y disfunciones de la ATM con enfoque integral.',
+    subs: ['Trastornos de la ATM', 'Placas neuromiorelajantes de alta precisión'],
+  },
+  {
+    num: '03', tag: 'Salud',
+    title: 'Endodoncia',
+    desc: 'Tratamiento de conductos con tecnología de punta para salvar tu diente y eliminar el dolor de raíz.',
+    subs: ['Endodoncia en dientes unirradiculares y multirradiculares', 'Retratamientos endodónticos', 'Manejo de infecciones pulpares'],
+  },
+  {
+    num: '04', tag: 'Encías',
+    title: 'Periodoncia',
+    desc: 'Prevención y tratamiento de enfermedades de las encías para mantener unas bases sanas y fuertes.',
+    subs: ['Tratamiento de enfermedad periodontal (gingivitis y periodontitis)', 'Frenilectomías', 'Terapias de mantenimiento periodontal'],
+  },
+  {
+    num: '05', tag: 'Estética',
+    title: 'Ortodoncia',
+    desc: 'Brackets, alineadores y aparatología fija o removible para una sonrisa bien alineada a cualquier edad.',
+    subs: ['Ortodoncia convencional', 'Ortodoncia de autoligado', 'Ortodoncia estética (brackets de zafiro)', 'Ortodoncia invisible (alineadores transparentes)'],
+  },
+  {
+    num: '06', tag: 'General',
+    title: 'Odontología General',
+    desc: 'Consultas, limpiezas, obturaciones y diagnóstico preventivo para cuidar tu salud bucal en cada etapa de tu vida.',
+    subs: ['Restauraciones en resina de alta estética', 'Reemplazo de amalgamas por materiales estéticos', 'Tratamientos preventivos y de mantenimiento'],
+  },
 ]
 
 const testimonials = [

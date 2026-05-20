@@ -37,7 +37,7 @@ beforeEach(() => {
 describe('GET /api/citas/disponibilidad', () => {
   // La ruta es pública (sin autenticación), siempre retorna 200/400/500
   it('retorna 200 con todos los slots disponibles cuando no hay citas', async () => {
-    const res  = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-05-10'))
+    const res  = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-06-10'))
     const body = await res.json()
     expect(res.status).toBe(200)
     expect(body.disponibles).toHaveLength(10)
@@ -55,11 +55,11 @@ describe('GET /api/citas/disponibilidad', () => {
 
   it('retorna disponibles y ocupadas para una fecha sin citas', async () => {
     vi.mocked(prisma.cita.findMany).mockResolvedValue([] as never)
-    const res  = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-05-10'))
+    const res  = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-06-10'))
     const body = await res.json()
 
     expect(res.status).toBe(200)
-    expect(body.fecha).toBe('2026-05-10')
+    expect(body.fecha).toBe('2026-06-10')
     expect(Array.isArray(body.disponibles)).toBe(true)
     expect(Array.isArray(body.ocupadas)).toBe(true)
     expect(body.ocupadas).toHaveLength(0)
@@ -72,7 +72,7 @@ describe('GET /api/citas/disponibilidad', () => {
       { hora: '09:00' },
       { hora: '10:00' },
     ] as never)
-    const res  = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-05-10'))
+    const res  = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-06-10'))
     const body = await res.json()
 
     expect(body.ocupadas).toContain('09:00')
@@ -88,7 +88,7 @@ describe('GET /api/citas/disponibilidad', () => {
       { hora: '11:00' },
       { hora: '14:00' },
     ] as never)
-    const res  = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-05-10'))
+    const res  = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-06-10'))
     const body = await res.json()
 
     expect(body.disponibles.length + body.ocupadas.length).toBe(10)
@@ -96,14 +96,14 @@ describe('GET /api/citas/disponibilidad', () => {
 
   it('la consulta a prisma excluye citas canceladas', async () => {
     vi.mocked(prisma.cita.findMany).mockResolvedValue([] as never)
-    await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-05-10'))
+    await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-06-10'))
     const call = vi.mocked(prisma.cita.findMany).mock.calls[0][0] as { where: Record<string, unknown> }
     expect(call.where.estado).toEqual({ not: 'cancelada' })
   })
 
   it('retorna 500 si prisma lanza error', async () => {
     vi.mocked(prisma.cita.findMany).mockRejectedValue(new Error('DB down'))
-    const res = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-05-10'))
+    const res = await GET(makeReq('http://localhost/api/citas/disponibilidad?fecha=2026-06-10'))
     expect(res.status).toBe(500)
   })
 })

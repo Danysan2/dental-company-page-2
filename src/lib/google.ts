@@ -121,7 +121,7 @@ export async function agregarCitaSheets(cita: CitaGoogleData): Promise<number | 
     const auth  = getAuth()
     const sheets = google.sheets({ version: 'v4', auth })
 
-    const horaFin = calcularHoraFin(cita.hora, cita.duracionMinutos)
+    const horaFin = cita.horaFin ?? calcularHoraFin(cita.hora, cita.duracionMinutos)
     const now     = new Date().toISOString()
 
     const row = [
@@ -363,6 +363,7 @@ export async function buscarFilaCitaPorDatos(
 export interface ActualizacionCitaSheets {
   fecha?:  string  // YYYY-MM-DD
   hora?:   string  // HH:MM
+  horaFin?: string // HH:MM (hora_fin manual — si se omite, se calcula desde duracionMinutos)
   estado?: string
   duracionMinutos?: number
   calendarEventId?: string
@@ -391,8 +392,8 @@ export async function actualizarCitaSheets(
     }
     if (datos.hora) {
       updates.push({ range: `citas!I${fila}`, values: [[datos.hora]] })
-      const duracion = datos.duracionMinutos ?? 60
-      updates.push({ range: `citas!J${fila}`, values: [[calcularHoraFin(datos.hora, duracion)]] })
+      const horaFin = datos.horaFin ?? calcularHoraFin(datos.hora, datos.duracionMinutos ?? 60)
+      updates.push({ range: `citas!J${fila}`, values: [[horaFin]] })
     }
     if (datos.estado) {
       updates.push({ range: `citas!K${fila}`, values: [[datos.estado]] })

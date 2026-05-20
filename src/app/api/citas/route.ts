@@ -176,7 +176,7 @@ export async function POST(req: NextRequest) {
           clienteTelefono: cita.cliente.telefono ?? '',
           clienteNombre:   cita.cliente.nombre,
           servicioId:      cita.servicioId,
-          servicioNombre:  cita.servicio.nombre,
+          servicioNombre:  cita.subServicio ? `${cita.servicio.nombre} — ${cita.subServicio.nombre}` : cita.servicio.nombre,
           precio:          cita.precio ?? cita.servicio.precio,
           fecha:           cita.fecha.toISOString().slice(0, 10),
           hora:            cita.hora,

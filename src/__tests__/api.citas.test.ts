@@ -22,8 +22,15 @@ vi.mock('@/lib/prisma', () => ({
   },
 }))
 
+vi.mock('@/lib/google', () => ({
+  agregarCitaSheets:       vi.fn(),
+  actualizarCalendarEventId: vi.fn(),
+  crearEventoCalendar:     vi.fn(),
+}))
+
 import { requireSession, getSession } from '@/lib/auth'
 import { prisma }     from '@/lib/prisma'
+import { agregarCitaSheets, actualizarCalendarEventId, crearEventoCalendar } from '@/lib/google'
 import { GET, POST }  from '@/app/api/citas/route'
 
 // ── Helpers ──────────────────────────────────────────────────
@@ -43,7 +50,7 @@ const mockCita = {
   clienteId:      'cl1',
   servicioId:     'sv1',
   subServicioId:  null,
-  fecha:          new Date('2026-05-10'),
+  fecha:          new Date('2026-06-10'),
   hora:           '09:00',
   horaFin:        null,
   estado:         'programada',
@@ -64,6 +71,9 @@ beforeEach(() => {
   vi.mocked(prisma.cita.updateMany).mockResolvedValue({ count: 0 } as never)
   vi.mocked(prisma.cita.count).mockResolvedValue(0 as never)
   vi.mocked(prisma.$transaction).mockImplementation(async (fn: (tx: typeof prisma) => Promise<unknown>) => fn(prisma))
+  vi.mocked(agregarCitaSheets).mockResolvedValue(12)
+  vi.mocked(crearEventoCalendar).mockResolvedValue('calendar-event-1')
+  vi.mocked(actualizarCalendarEventId).mockResolvedValue(undefined)
 })
 
 // ── GET /api/citas ───────────────────────────────────────────
@@ -85,7 +95,7 @@ describe('GET /api/citas', () => {
     expect(body[0].cliente_nombre).toBe('Ana García')
     expect(body[0].cliente_cedula).toBe('1234567890')
     expect(body[0].servicio).toBe('Limpieza y Profilaxis')
-    expect(body[0].fecha).toBe('2026-05-10')
+    expect(body[0].fecha).toBe('2026-06-10')
     expect(body[0].hora).toBe('09:00')
     expect(body[0].estado).toBe('programada')
   })
@@ -116,17 +126,17 @@ describe('POST /api/citas', () => {
   const validBody = {
     clienteId:  'cl1',
     servicioId: 'sv1',
-    fecha:      '2026-05-10',
+    fecha:      '2026-06-10',
     hora:       '09:00',
   }
 
   it('retorna 400 si falta clienteId', async () => {
-    const res = await POST(makeReq('http://localhost/api/citas', { servicioId: 'sv1', fecha: '2026-05-10', hora: '09:00' }))
+    const res = await POST(makeReq('http://localhost/api/citas', { servicioId: 'sv1', fecha: '2026-06-10', hora: '09:00' }))
     expect(res.status).toBe(400)
   })
 
   it('retorna 400 si falta servicioId', async () => {
-    const res = await POST(makeReq('http://localhost/api/citas', { clienteId: 'cl1', fecha: '2026-05-10', hora: '09:00' }))
+    const res = await POST(makeReq('http://localhost/api/citas', { clienteId: 'cl1', fecha: '2026-06-10', hora: '09:00' }))
     expect(res.status).toBe(400)
   })
 
@@ -158,8 +168,50 @@ describe('POST /api/citas', () => {
     expect(res.status).toBe(201)
     expect(body.cliente_nombre).toBe('Ana García')
     expect(body.servicio).toBe('Limpieza y Profilaxis')
-    expect(body.fecha).toBe('2026-05-10')
+    expect(body.fecha).toBe('2026-06-10')
     expect(body.estado).toBe('programada')
+  })
+
+  it('crea una cita pública de consulta general y dispara sync con Google', async () => {
+    vi.mocked(getSession).mockResolvedValue(null)
+    vi.mocked(prisma.cita.findFirst).mockResolvedValue(null)
+
+    const consultaCita = {
+      ...mockCita,
+      servicioId: 'sv-consulta',
+      precio: null,
+      notas: 'Dolor al masticar',
+      servicio: { id: 'sv-consulta', nombre: 'Consulta general - Valoración inicial', precio: 80000, duracion: 60 },
+    }
+    vi.mocked(prisma.cita.create).mockResolvedValue(consultaCita as never)
+
+    const res = await POST(makeReq('http://localhost/api/citas', {
+      clienteId:  'cl1',
+      servicioId: 'sv-consulta',
+      fecha:      '2026-06-10',
+      hora:       '09:00',
+      precio:     999999,
+      notas:      'Dolor al masticar',
+    }))
+
+    expect(res.status).toBe(201)
+
+    const createCall = vi.mocked(prisma.cita.create).mock.calls[0][0] as { data: Record<string, unknown> }
+    expect(createCall.data.precio).toBeNull()
+    expect(createCall.data.estado).toBe('programada')
+
+    await vi.waitFor(() => {
+      expect(agregarCitaSheets).toHaveBeenCalled()
+      expect(crearEventoCalendar).toHaveBeenCalled()
+      expect(actualizarCalendarEventId).toHaveBeenCalledWith(12, 'calendar-event-1')
+    })
+
+    expect(agregarCitaSheets).toHaveBeenCalledWith(expect.objectContaining({
+      servicioId:     'sv-consulta',
+      servicioNombre: 'Consulta general - Valoración inicial',
+      precio:         80000,
+      notas:          'Dolor al masticar',
+    }))
   })
 
   it('usa estado "programada" por defecto', async () => {
