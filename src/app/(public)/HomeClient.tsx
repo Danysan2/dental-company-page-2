@@ -223,7 +223,7 @@ export default function Home() {
                 <button
                   type="button"
                   key={s.title}
-                  className={`svc-card reveal d${i + 1}${isOpen ? ' svc-card--open' : ''}`}
+                  className={`svc-card${isOpen ? ' svc-card--open' : ''}`}
                   onClick={() => setActiveService(current => current === i ? null : i)}
                   aria-expanded={isOpen}
                   aria-controls={`svc-subcats-${i}`}
