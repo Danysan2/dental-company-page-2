@@ -90,6 +90,18 @@ function useEscapeKey(onClose: () => void) {
   }, [onClose])
 }
 
+function openNativePicker(input: HTMLInputElement | null) {
+  if (!input) return
+  input.focus()
+  const pickerInput = input as HTMLInputElement & { showPicker?: () => void }
+  if (typeof pickerInput.showPicker !== 'function') return
+  try {
+    pickerInput.showPicker()
+  } catch {
+    // Some browsers only allow showPicker from direct pointer/keyboard gestures.
+  }
+}
+
 /* ── Combobox búsqueda + creación de paciente ── */
 function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
   clients: Cliente[]
@@ -314,6 +326,9 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
   const saveFlight = useRef(false)
+  const fechaInputRef = useRef<HTMLInputElement>(null)
+  const horaInputRef = useRef<HTMLInputElement>(null)
+  const horaFinInputRef = useRef<HTMLInputElement>(null)
 
   useEscapeKey(onClose)
 
@@ -420,8 +435,16 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
             <div className="form-group">
               <label>Fecha *</label>
               <input
+                ref={fechaInputRef}
                 type="date"
                 value={form.fecha}
+                onClick={() => openNativePicker(fechaInputRef.current)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    openNativePicker(fechaInputRef.current)
+                  }
+                }}
                 onChange={e => upd('fecha', e.target.value)}
               />
             </div>
@@ -429,8 +452,16 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
             <div className="form-group">
               <label>Hora inicio *</label>
               <input
+                ref={horaInputRef}
                 type="time"
                 value={form.hora}
+                onClick={() => openNativePicker(horaInputRef.current)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    openNativePicker(horaInputRef.current)
+                  }
+                }}
                 onChange={e => upd('hora', e.target.value)}
               />
             </div>
@@ -438,9 +469,17 @@ function CitaModal({ cita, mode, clients, servicios, onClose, onSaved, onCliente
             <div className="form-group">
               <label>Hora fin <span style={{ fontWeight: 400, opacity: 0.6 }}>(opcional)</span></label>
               <input
+                ref={horaFinInputRef}
                 type="time"
                 value={form.hora_fin}
                 min={form.hora || undefined}
+                onClick={() => openNativePicker(horaFinInputRef.current)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    openNativePicker(horaFinInputRef.current)
+                  }
+                }}
                 onChange={e => upd('hora_fin', e.target.value)}
               />
             </div>

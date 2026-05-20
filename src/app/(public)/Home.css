@@ -388,12 +388,14 @@
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  width: 100%;
   padding: 2rem;
   background: var(--c-bg);
   border: 1px solid var(--c-warm-2);
   border-radius: var(--r-xl);
-  text-decoration: none;
   color: inherit;
+  font: inherit;
+  text-align: left;
   transition: transform var(--t), box-shadow var(--t), border-color var(--t), background var(--t);
   cursor: pointer;
   position: relative;
@@ -420,6 +422,20 @@
 }
 
 .svc-card:hover::before {
+  transform: scaleX(1);
+}
+
+.svc-card:focus-visible {
+  outline: 3px solid rgba(137, 102, 70, 0.28);
+  outline-offset: 3px;
+}
+
+.svc-card--open {
+  border-color: var(--c-accent-lt);
+  box-shadow: var(--sh-md);
+}
+
+.svc-card--open::before {
   transform: scaleX(1);
 }
 
@@ -498,6 +514,58 @@
   font-weight: 300;
 }
 
+.svc-card__subcats {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.25s ease, margin-top 0.25s ease;
+}
+
+.svc-card--open .svc-card__subcats {
+  max-height: 420px;
+  opacity: 1;
+  margin-top: 0.45rem;
+}
+
+.svc-card__subcats-title {
+  display: block;
+  margin-bottom: 0.65rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+}
+
+.svc-card__subcats ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 0;
+  margin: 0;
+}
+
+.svc-card__subcats li {
+  position: relative;
+  padding-left: 1rem;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.svc-card__subcats li::before {
+  content: '';
+  position: absolute;
+  top: 0.62em;
+  left: 0;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--c-accent-lt);
+}
+
 .svc-card__arrow {
   width: 36px;
   height: 36px;
@@ -513,7 +581,12 @@
 }
 
 .svc-card:hover .svc-card__arrow {
-  transform: translateX(4px);
+  background: var(--c-accent);
+  color: var(--c-off-white);
+}
+
+.svc-card--open .svc-card__arrow {
+  transform: rotate(180deg);
   background: var(--c-accent);
   color: var(--c-off-white);
 }

@@ -308,6 +308,11 @@
   gap: 0.55rem;
 }
 
+.modal-grid input[type="date"],
+.modal-grid input[type="time"] {
+  cursor: pointer;
+}
+
 .reagendar-info {
   display: flex;
   flex-direction: column;

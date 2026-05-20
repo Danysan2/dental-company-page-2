@@ -12,25 +12,25 @@ const services = [
   {
     num: '01', tag: 'Estética',
     title: 'Rehabilitación Oral y Estética Dental',
-    desc: 'Diseño de sonrisa, carillas de porcelana y blanqueamiento para una transformación natural y duradera.',
-    subs: ['Diseños de sonrisa en cerámica: carillas y lentes cerámicos', 'Diseños de sonrisa en resina de alta estética', 'Carillas directas e indirectas', 'Incrustaciones (inlays/onlays)', 'Coronas totalmente cerámicas y metal-cerámica', 'Prótesis fijas, sobre implantes, totales y removibles'],
+    desc: 'Restauramos y diseñamos sonrisas con materiales de última generación, logrando resultados naturales, armónicos y duraderos.',
+    subs: ['Diseños de sonrisa en cerámica: carillas cerámicas y lentes cerámicos', 'Diseños de sonrisa en resina de alta estética', 'Carillas directas e indirectas', 'Incrustaciones (inlays/onlays)', 'Coronas totalmente cerámicas y metal-cerámica', 'Prótesis fijas', 'Prótesis sobre implantes', 'Prótesis totales', 'Prótesis removibles'],
   },
   {
     num: '02', tag: 'ATM',
-    title: 'Articulación Temporomandibular (ATM)',
-    desc: 'Diagnóstico y tratamiento del dolor mandibular, bruxismo y disfunciones de la ATM con enfoque integral.',
+    title: 'Manejo de la Articulación Temporomandibular (ATM)',
+    desc: 'Enfoque especializado en el diagnóstico y tratamiento del dolor orofacial.',
     subs: ['Trastornos de la ATM', 'Placas neuromiorelajantes de alta precisión'],
   },
   {
     num: '03', tag: 'Salud',
     title: 'Endodoncia',
-    desc: 'Tratamiento de conductos con tecnología de punta para salvar tu diente y eliminar el dolor de raíz.',
+    desc: 'Tratamientos enfocados en la conservación dental y alivio del dolor.',
     subs: ['Endodoncia en dientes unirradiculares y multirradiculares', 'Retratamientos endodónticos', 'Manejo de infecciones pulpares'],
   },
   {
     num: '04', tag: 'Encías',
     title: 'Periodoncia',
-    desc: 'Prevención y tratamiento de enfermedades de las encías para mantener unas bases sanas y fuertes.',
+    desc: 'Salud y mantenimiento de los tejidos de soporte dental.',
     subs: ['Tratamiento de enfermedad periodontal (gingivitis y periodontitis)', 'Frenilectomías', 'Terapias de mantenimiento periodontal'],
   },
   {
@@ -42,7 +42,7 @@ const services = [
   {
     num: '06', tag: 'General',
     title: 'Odontología General',
-    desc: 'Consultas, limpiezas, obturaciones y diagnóstico preventivo para cuidar tu salud bucal en cada etapa de tu vida.',
+    desc: 'Prevención y restauración con enfoque estético.',
     subs: ['Restauraciones en resina de alta estética', 'Reemplazo de amalgamas por materiales estéticos', 'Tratamientos preventivos y de mantenimiento'],
   },
 ]
@@ -104,6 +104,8 @@ function TestiCard({ t, delay }: { t: typeof testimonials[0]; delay: number }) {
 }
 
 export default function Home() {
+  const [activeService, setActiveService] = useState<number | null>(null)
+
   useReveal()
 
   return (
@@ -215,21 +217,37 @@ export default function Home() {
           </div>
 
           <div className="services__grid">
-            {services.map((s, i) => (
-              <Link href="/citas" key={i} className={`svc-card reveal d${i + 1}`}>
-                <div className="svc-card__num">{s.num}</div>
-                <div className="svc-card__body">
-                  <span className="svc-card__tag">{s.tag}</span>
-                  <h3 className="svc-card__title">{s.title}</h3>
-                  <p className="svc-card__desc">{s.desc}</p>
-                </div>
-                <div className="svc-card__arrow">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </div>
-              </Link>
-            ))}
+            {services.map((s, i) => {
+              const isOpen = activeService === i
+              return (
+                <button
+                  type="button"
+                  key={s.title}
+                  className={`svc-card reveal d${i + 1}${isOpen ? ' svc-card--open' : ''}`}
+                  onClick={() => setActiveService(current => current === i ? null : i)}
+                  aria-expanded={isOpen}
+                  aria-controls={`svc-subcats-${i}`}
+                >
+                  <div className="svc-card__num">{s.num}</div>
+                  <div className="svc-card__body">
+                    <span className="svc-card__tag">{s.tag}</span>
+                    <h3 className="svc-card__title">{s.title}</h3>
+                    <p className="svc-card__desc">{s.desc}</p>
+                    <div id={`svc-subcats-${i}`} className="svc-card__subcats" aria-hidden={!isOpen}>
+                      <span className="svc-card__subcats-title">Subcategorías</span>
+                      <ul>
+                        {s.subs.map(sub => <li key={sub}>{sub}</li>)}
+                      </ul>
+                    </div>
+                  </div>
+                  <span className="svc-card__arrow" aria-hidden="true">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="6 9 12 15 18 9" />
+                    </svg>
+                  </span>
+                </button>
+              )
+            })}
           </div>
         </div>
       </section>
