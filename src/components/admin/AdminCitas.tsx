@@ -157,8 +157,8 @@ function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
 
   const handleCrear = async () => {
     if (crearFlight.current) return
-    if (!nuevoForm.nombre.trim() || !nuevoForm.cedula.trim() || !isPhoneComplete(nuevoForm.telefono)) {
-      setErrNuevo('Nombre, cédula y teléfono son obligatorios.')
+    if (!nuevoForm.nombre.trim() || !isPhoneComplete(nuevoForm.telefono)) {
+      setErrNuevo('Nombre y teléfono son obligatorios.')
       return
     }
     crearFlight.current = true
@@ -170,7 +170,7 @@ function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nombre: nuevoForm.nombre.trim(),
-          cedula: nuevoForm.cedula.trim(),
+          cedula: nuevoForm.cedula.trim() || null,
           telefono: nuevoForm.telefono.trim(),
           correo: nuevoForm.correo.trim() || null,
         }),
@@ -219,7 +219,7 @@ function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
           {filtered.map(c => (
             <button key={c.id} className="cliente-option" onMouseDown={() => select(c)}>
               <span className="cliente-option__name">{c.nombre}</span>
-              <span className="cliente-option__meta">{c.cedula} · {c.telefono}</span>
+              <span className="cliente-option__meta">{[c.cedula, c.telefono].filter(Boolean).join(' · ')}</span>
             </button>
           ))}
           {filtered.length === 0 && (
@@ -251,7 +251,7 @@ function ClienteCombobox({ clients, value, onChange, onClienteCreado }: {
               />
             </div>
             <div className="form-group">
-              <label>Cédula *</label>
+              <label>Cédula <span style={{ fontWeight: 400, opacity: 0.6 }}>(opcional)</span></label>
               <input
                 value={nuevoForm.cedula}
                 maxLength={12}
